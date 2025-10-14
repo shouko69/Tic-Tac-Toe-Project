@@ -1,0 +1,30 @@
+# Visual Studio
+.vs/
+*.sln.user
+*.vcxproj.user
+*.VC.db
+*.sdf
+*.suo
+
+# Build and Temporary Files
+Debug/
+Release/
+x64/
+x86/
+build/
+bin/
+
+# Intermediate files
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.tlog
+*.log
+
+# Windows
+*.dll
+*.exe
+
+# Other
+.DS_Store
