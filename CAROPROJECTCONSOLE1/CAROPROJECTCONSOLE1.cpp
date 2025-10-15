@@ -1,4 +1,4 @@
-#include "View.h"
+﻿#include "View.h"
 #include "Control.h"
 #include <ctype.h>
 #include <conio.h>
@@ -11,6 +11,7 @@ int main() {
 	StartGame();
 	bool validEnter = true;
 	while (1) {
+
 		_COMMAND = toupper(_getch());
 		if (_COMMAND == 27) { // 27 la ma ESC
 			ExitGame();
@@ -20,6 +21,7 @@ int main() {
 			if (_COMMAND == 'A') MoveLeft();
 			else if (_COMMAND == 'S') MoveDown();
 			else if (_COMMAND == 'D') MoveRight();
+			else if (_COMMAND == 'W') MoveUp();
 			else if (_COMMAND == 13) { // 13 la ma Enter
 				switch (CheckBoard(_X, _Y)) {
 				case -1:

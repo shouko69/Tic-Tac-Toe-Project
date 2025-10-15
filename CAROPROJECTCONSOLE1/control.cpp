@@ -7,7 +7,7 @@ void StartGame() {
 	system("cls");
 	ResetData(); // Khoi tao du lieu goc
 	DrawBoard(BOARD_SIZE); // Ve man hinh game
-
+	GotoXY(_X, _Y);
 }
 
 void ExitGame() {
