@@ -22,60 +22,7 @@ void GabageCollect() {
 }
 //ktra ban co xem co thg nao win khong
 
-// Kiem tra ban co da day chua
-bool IsFullBoard() {
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            if (_A[i][j].c == 0)  // 0 nghĩa là ô trống
-                return false;
-        }
-    }
-    return true;
-}
 
-// Kiem tra co nguoi thang chua
-bool CheckWin() {
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            int c = _A[i][j].c;
-            if (c == 0) continue; // bỏ qua ô trống
-
-            // kiem tra 4 huong 
-            // hàng ngang 
-            if (j <= BOARD_SIZE - 5 &&
-                c == _A[i][j + 1].c &&
-                c == _A[i][j + 2].c &&
-                c == _A[i][j + 3].c &&
-                c == _A[i][j + 4].c)
-                return true;
-
-            // cột dọc 
-            if (i <= BOARD_SIZE - 5 &&
-                c == _A[i + 1][j].c &&
-                c == _A[i + 2][j].c &&
-                c == _A[i + 3][j].c &&
-                c == _A[i + 4][j].c)
-                return true;
-
-            // chéo chính 
-            if (i <= BOARD_SIZE - 5 && j <= BOARD_SIZE - 5 &&
-                c == _A[i + 1][j + 1].c &&
-                c == _A[i + 2][j + 2].c &&
-                c == _A[i + 3][j + 3].c &&
-                c == _A[i + 4][j + 4].c)
-                return true;
-
-            // chéo phụ 
-            if (i >= 4 && j <= BOARD_SIZE - 5 &&
-                c == _A[i - 1][j + 1].c &&
-                c == _A[i - 2][j + 2].c &&
-                c == _A[i - 3][j + 3].c &&
-                c == _A[i - 4][j + 4].c)
-                return true;
-        }
-    }
-    return false;
-}
 
 // Kiem tra trang thai ban co
 int TestBoard() {
