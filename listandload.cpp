@@ -9,11 +9,6 @@ string listAndGetFileName() {
     vector<string> savedFiles;
     int index = 1;
 
-void listAndLoadGames(CaroGame& game) {
-    cout << "\n--- DANH SÁCH MÀN CHƠI ĐÃ LƯU ---" << endl;
-    vector<string> savedFiles;
-    int index = 1;
-
     // Đường dẫn tìm kiếm (Sử dụng wildcard * để tìm tất cả file .txt)
     string searchPath = SAVE_DIR + "*.txt";
 
@@ -84,3 +79,4 @@ void listAndLoadGames(CaroGame& game) {
     loadGame(game, savedFiles[choice - 1]);
 
 }
+
