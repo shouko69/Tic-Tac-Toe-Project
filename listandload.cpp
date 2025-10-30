@@ -1,4 +1,13 @@
 ﻿#include "Save&load.h"
+#include <vector>
+#include <conio.h> 
+#include <limits>  
+
+string listAndGetFileName() {
+    system("cls");
+    cout << "\n--- DANH SÁCH MÀN CHƠI ĐÃ LƯU ---" << endl;
+    vector<string> savedFiles;
+    int index = 1;
 
 void listAndLoadGames(CaroGame& game) {
     cout << "\n--- DANH SÁCH MÀN CHƠI ĐÃ LƯU ---" << endl;
@@ -31,27 +40,47 @@ void listAndLoadGames(CaroGame& game) {
                 savedFiles.push_back(baseName);
                 cout << index++ << ". " << baseName << endl;
             }
+            
+        string filename(findFileData.cFileName);
+        if (!(findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (filename.length() > 4) {
+                string baseName = filename.substr(0, filename.length() - 4);
+                savedFiles.push_back(baseName);
+                cout << index++ << ". " << baseName << endl;
+            }
         }
     } while (FindNextFileA(hFind, &findFileData) != 0);
-
-    // Đóng handle tìm kiếm
     FindClose(hFind);
 
     if (savedFiles.empty()) {
         cout << "Chưa có màn chơi nào được lưu." << endl;
-        return;
+        cout << "\nNhấn phím bất kỳ để quay lại menu chính";
+        _getch();
+        return "";
     }
 
     // Cho người dùng chọn file để tải
-    int choice;
-    cout << "Chọn số thứ tự màn cần tải (Nhập 0 để hủy): ";
-    if (!(cin >> choice) || choice <= 0 || choice > savedFiles.size()) {
-        cout << "Hủy tải game hoặc lựa chọn không hợp lệ." << endl;
-        cin.clear();
+    int choice=-1;
+    do {
+        cout << "\nChọn số thứ tự màn cần tải (Nhập 0 để hủy): ";
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        return;
-    }
+        
+        if (!(cin >> choice)) {
+            cin.clear(); // Xóa cờ lỗi
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Xóa bộ đệm
+            choice = -1; 
+            cout << "Lỗi nhập, vui lòng nhập lại số thứ tự." << endl;
+        } else if (choice == 0) {
+            return ""; // Hủy
+        } else if (choice < 1 || choice > savedFiles.size()) {
+            cout << "Số thứ tự không hợp lệ, vui lòng nhập lại." << endl;
+        }
+    } while (choice < 1 || choice > savedFiles.size());
+
+    return savedFiles[choice - 1]; // Trả về tên file
+}
 
     // Tải game với tên file được chọn
     loadGame(game, savedFiles[choice - 1]);
+
 }
