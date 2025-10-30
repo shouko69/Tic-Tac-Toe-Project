@@ -23,4 +23,7 @@ void listAndLoadGames();
 
 // Hàm chuyển đổi _TURN (bool) sang int (vì file lưu int)
 int getTurnInt();
+
 void setTurnFromInt(int turnInt);
+// Trả về chuỗi rỗng ("") nếu người dùng hủy hoặc không có file.
+string listAndGetFileName();
