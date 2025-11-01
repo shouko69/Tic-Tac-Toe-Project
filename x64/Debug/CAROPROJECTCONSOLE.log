@@ -1,0 +1,10 @@
+﻿  CAROPROJECTCONSOLE1.cpp
+  control.cpp
+  HandleInput.cpp
+  listandload.cpp
+  Load.cpp
+  model.cpp
+  Save.cpp
+  view.cpp
+  Generating Code...
+  CAROPROJECTCONSOLE.vcxproj -> E:\Cơ sở lập trình (LT)\CAROPROJECTCONSOLE\x64\Debug\CAROPROJECTCONSOLE.exe
