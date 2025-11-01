@@ -1,18 +1,42 @@
-# Visual Studio temporary files/folders
-.vs/
+#----------------------------------------------------------------------#
+# Visual Studio / C++ Git Ignore Standard
+#----------------------------------------------------------------------#
 
-# Binaries/Executables
+# Thư mục tạm thời và cấu hình người dùng của Visual Studio
+.vs/
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.useros
+*.tlog
+*.ipch
+
+# Thư mục và Tệp Nhị phân/Thực thi (Binaries/Executables)
+# Loại trừ các file chạy và object files
 *.exe
 *.dll
 *.obj
+*.pdb
+*.ilk
+*.aps
+*.bsc
+*.ncb
+*.idb
 
-# Generated files
+# Thư mục Build
+# Loại trừ các thư mục được tạo khi biên dịch
 [Dd]ebug/
 [Rr]elease/
-*.suo
-*.user
+[Aa]rm/
+[Aa]rm64/
+[Xx]64/
+[Xx]86/
 
-# Project-specific files you usually don't want to commit
+# Loại trừ các tệp liên quan đến dự án (Project files)
+*.vcxproj.user
 *.VC.db
-*.tlog
-*.ipch
+ipch/
+
+# Logs và Output
+log/
