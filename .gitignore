@@ -1,0 +1,18 @@
+# Visual Studio temporary files/folders
+.vs/
+
+# Binaries/Executables
+*.exe
+*.dll
+*.obj
+
+# Generated files
+[Dd]ebug/
+[Rr]elease/
+*.suo
+*.user
+
+# Project-specific files you usually don't want to commit
+*.VC.db
+*.tlog
+*.ipch
