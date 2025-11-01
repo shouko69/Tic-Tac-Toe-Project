@@ -340,4 +340,5 @@ void DrawFullPauseMenu(int selected_index) {
     std::cout << guide;
 
     SetColor(COLOR_NORMAL_TEXT);
+
 }

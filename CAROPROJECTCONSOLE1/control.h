@@ -10,3 +10,5 @@ void MoveUp();
 void MoveDown();
 void SetCursorVisible(bool visible);
 void ShowCursorForBoard();
+void StartAbout();
+

@@ -134,7 +134,13 @@ int main() {
         case SETTINGS:
         case LOAD:
         case GUIDE:
+            //StartGuide();
+            if (_kbhit() && toupper(_getch()) == 27) {
+                currentState = MENU;
+                SetCursorVisible(false); // menu ẩn con trỏ
+            }
         case ABOUT: // tạm thời cho các case cùng một lệnh if
+            StartAbout();
             if (_kbhit() && toupper(_getch()) == 27) {
                 currentState = MENU;
                 SetCursorVisible(false); // menu ẩn con trỏ
