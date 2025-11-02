@@ -5,6 +5,12 @@
 #include "Control.h"
 #include <iostream>
 #include <string>
+#include "truecolor_utils.h"
+#include "GameState.h" 
+#include <io.h>       
+#include <fcntl.h> 
+#include <stdlib.h>
+#include "HandleInput.h"
 
 // --- CÁC HẰNG SỐ CỦA MENU ---
 const char* MENU_ITEMS[] = { "NEW GAME", "LOAD GAME", "SETTING", "GUIDE", "ABOUT", "EXIT" };
@@ -31,6 +37,22 @@ void FixConsoleWindow() {
 void GotoXY(int x, int y) {
     COORD coord = { (SHORT)x, (SHORT)y };
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+COORD GetConsoleCursorPosition()
+{
+    CONSOLE_SCREEN_BUFFER_INFO cbsi;
+    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE); // get console_output_handle
+    if (GetConsoleScreenBufferInfo(hConsoleOutput, &cbsi))
+    {
+        return cbsi.dwCursorPosition;
+    }
+    else
+    {
+        // The function failed. Call GetLastError() for details.
+        COORD invalid = { 0, 0 };
+        return invalid;
+    }
 }
 
 void SetColor(int color) {
@@ -333,7 +355,7 @@ void DrawFullPauseMenu(int selected_index) {
         DrawPauseMenuItem(i, i == selected_index);
     }
 
-    // --- HƯỚNG DẪN ---
+    // --- HƯỚNG DẪN DI CHUYỂN ---
     SetColor(COLOR_GUIDE);
     const char* guide = "'W': Move up, 'S': Move down,  'Enter': Select,  'ESC': Resume";
     GotoXY(CenterX(guide), PAUSE_START_Y + TOTAL_PAUSE_ITEMS * 2 + 3);
@@ -342,3 +364,156 @@ void DrawFullPauseMenu(int selected_index) {
     SetColor(COLOR_NORMAL_TEXT);
 
 }
+
+//Draw gameScreen
+
+void StartGuide() {
+    SetColorRGB(51, 0, 132);
+    system("cls");
+    GabageCollect();
+    int i = 58, offset = 1;
+    //set to UTF16 text cout
+    _setmode(_fileno(stdout), _O_U16TEXT);
+	GotoXY(i, 2);
+    std::wcout << L" ██████╗ ██╗   ██╗██╗██████╗ ███████╗\n"; GotoXY(i, 3);
+    std::wcout << L"██╔════╝ ██║   ██║██║██╔══██╗██╔════╝\n"; GotoXY(i, 4);
+    std::wcout << L"██║  ███╗██║   ██║██║██║  ██║█████╗  \n"; GotoXY(i, 5);
+    std::wcout << L"██║   ██║██║   ██║██║██║  ██║██╔══╝  \n"; GotoXY(i, 6);
+    std::wcout << L"╚██████╔╝╚██████╔╝██║██████╔╝███████╗\n"; GotoXY(i, 7);
+    std::wcout << L" ╚═════╝ ╚═════╝ ╚═╝╚═════╝ ╚══════╝ \n"; 
+	COORD guideCoor;
+	guideCoor.X = 25;
+	guideCoor.Y = 11;
+	const char* guideText[16] = { 
+        "Player Movement: ",
+        "'W': Go up",
+        "'S': Go down",
+        "'A': Go left",
+        "'D': Go right",
+        "","","","","" ,
+        "Caro is the game using the X and O symbols to represent players and followed by a set of rules: ", 
+        "",
+        "1. Players take turns placing their marks(X or O) on empty intersections.", 
+        "2. \"X\" always plays first, followed by \"O\" player.", 
+        "3. The first player to score five points in a row horizontally, vertically, or diagonally wins the game.", 
+        "4. If the board is completely filled and no player has five in a row, the game ends in a draw."
+        };
+
+	GotoXY(22, 8);
+	COORD currentPos = GetConsoleCursorPosition();
+	int width = 110, height = 20; // ┏━┓ -> width = 1;
+
+	_setmode(_fileno(stdout), _O_U16TEXT);
+
+	GotoXY(currentPos.X, currentPos.Y); // top left
+    std::wcout << L"┏";
+    for (int i = 1; i <= width; i++) { // print column
+        GotoXY(currentPos.X + i, currentPos.Y);
+        std::wcout << L"━";
+        GotoXY(currentPos.X + i, currentPos.Y + 2);
+        std::wcout << L"━";
+        GotoXY(currentPos.X + i, currentPos.Y + 10);
+        std::wcout << L"━";
+        GotoXY(currentPos.X + i, currentPos.Y + 12);
+        std::wcout << L"━";
+        GotoXY(currentPos.X + i, currentPos.Y + height + 1);
+        std::wcout << L"━";
+    }
+    GotoXY(currentPos.X + width + 1, currentPos.Y); // top right
+    std::wcout << L"┓";
+    for (int i = 1; i <= height; i++) { // print column
+        GotoXY(currentPos.X, currentPos.Y + i);
+        std::wcout << L"┃";
+        GotoXY(currentPos.X + width + 1, currentPos.Y + i);
+        std::wcout << L"┃";
+    }
+    for (int i = 1; i <= height / 2 - 3; i++) {
+        GotoXY(currentPos.X + 28, currentPos.Y + 2 + i);
+        std::wcout << L"┃";
+    }
+    GotoXY(currentPos.X, currentPos.Y + height + 1); // bottom left
+    std::wcout << L"┗";
+    GotoXY(currentPos.X + width + 1, currentPos.Y + height + 1); // bottom left
+    std::wcout << L"┛";
+
+	_setmode(_fileno(stdout), _O_TEXT);
+
+	for (int i = 0; i < sizeof(guideText) / sizeof(guideText[0]); i++) {
+		GotoXY(guideCoor.X, guideCoor.Y + i);
+		std::cout << guideText[i];
+	}
+    GotoXY(guideCoor.X + 37, guideCoor.Y - 2);
+    std::cout << "Game features and in-game operations";
+    GotoXY(guideCoor.X + 30, guideCoor.Y);
+    std::cout << "Game Features:";
+    GotoXY(guideCoor.X + 30, guideCoor.Y + 1);
+    std::cout << "'L': Load game";
+    GotoXY(guideCoor.X + 30, guideCoor.Y + 2);
+    std::cout << "'Z': Undo the last move";
+    GotoXY(guideCoor.X + 30, guideCoor.Y + 3);
+    std::cout << "'Enter': Mark and Continue";
+    GotoXY(guideCoor.X + 30, guideCoor.Y + 4);
+    std::cout << "'Esc': Halt the game/ Return to the previous scene of the game";
+    GotoXY(guideCoor.X + 37, guideCoor.Y + 8);
+    std::cout << "Game Rules Summary(Gomoku / Caro)";
+    ScreenHandle(MENU);
+}
+
+void StartAbout() {
+    SetColorRGB(51, 0, 132);
+    system("cls"); 
+    GabageCollect();
+    int i = 55, offset = 1;
+    //set to UTF16 text cout
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    GotoXY(i, 1);
+    std::wcout << L" █████╗ ██████╗  ██████╗ ██╗   ██╗████████╗\n"; GotoXY(i, 2);
+    std::wcout << L"██╔══██╗██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝\n"; GotoXY(i, 3);
+    std::wcout << L"███████║██████╔╝██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 4);
+    std::wcout << L"██╔══██║██╔══██╗██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 5);
+    std::wcout << L"██║  ██║██████╔╝╚██████╔╝╚██████╔╝   ██║   \n"; GotoXY(i, 6);
+    std::wcout << L"╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   \n";
+
+    COORD tableCoord;
+    tableCoord.X = 40;
+    tableCoord.Y = 10;
+    i = 0;
+    GotoXY(tableCoord.X + 5, tableCoord.Y);
+    std::wcout << L"Welcome to the Gomoku Game - made by team 6 - 25CTT3 - HCMUS" << std::endl;
+    i = i + 2;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    std::wcout << L"25120215 - Nguyễn Minh Nhật \t \t PvE Mode - Game Content" << std::endl;
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    std::wcout << L"25120215 - Nguyễn Hoàng Huy\t \t Game Interface Design" << std::endl;
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    std::wcout << L"25120215 - Vũ Thanh Phong \t \t Game Graphic Design - Game Flow Design" << std::endl;
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    std::wcout << L"25120215 - Đỗ Lê Nhật Quang \t \t Game Interface Design - Game sound" << std::endl;
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    std::wcout << L"25120215 - Nguyễn Phú Quang \t \t Load & Save game" << std::endl;
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    std::wcout << L"25120215 - Nguyễn Vũ Nhật Quang\t \t Game Graphic Design" << std::endl;
+    i += 4;
+    GotoXY(tableCoord.X + 25, tableCoord.Y + i + 2);
+    std::wcout << L"RELEASED IN 2025" << std::endl;
+    i += 2;
+    GotoXY(tableCoord.X + 25, tableCoord.Y + i + 2);
+    std::wcout << L"PRESS ESC TO BACK" << std::endl;
+    _setmode(_fileno(stdout), _O_TEXT);//set to UTF16 text cout
+    ScreenHandle(MENU);
+}
+
+//void StartLoadGame()
+
+//void StartSetting()
+
+//void DrawEsc ()
+
+
+
+

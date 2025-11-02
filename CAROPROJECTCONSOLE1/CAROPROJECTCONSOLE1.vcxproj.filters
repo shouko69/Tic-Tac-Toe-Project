@@ -47,5 +47,8 @@
     <ClInclude Include="HandleInput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="truecolor_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

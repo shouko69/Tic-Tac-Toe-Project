@@ -7,10 +7,11 @@
 #include <ctype.h>
 #include <iostream>
 #include <windows.h>
-
+#include "truecolor_utils.h"
 GameState currentState = MENU;
 
 int main() {
+    EnableTrueColor();
     FixConsoleWindow();
     InitConsole(); 
 
@@ -134,17 +135,11 @@ int main() {
         case SETTINGS:
         case LOAD:
         case GUIDE:
-            //StartGuide();
-            if (_kbhit() && toupper(_getch()) == 27) {
-                currentState = MENU;
-                SetCursorVisible(false); // menu ẩn con trỏ
-            }
+            StartGuide();
+            
+            break;
         case ABOUT: // tạm thời cho các case cùng một lệnh if
             StartAbout();
-            if (_kbhit() && toupper(_getch()) == 27) {
-                currentState = MENU;
-                SetCursorVisible(false); // menu ẩn con trỏ
-            }
             break;
 
             // --- THOÁT ---

@@ -23,7 +23,7 @@ extern const char* LOGO_LINE;
 #define COLOR_GUIDE         (15 * 16 + 8)  // Xám trên Nền Trắng (248)
 #define COLOR_SELECTED_BG   (14 * 16 + 0)  // Nền VÀNG (14), Chữ ĐEN (0)
 #define COLOR_UNSELECTED_BG (15 * 16 + 0)  // Nền TRẮNG (15), Chữ ĐEN (0)
-#define COLOR_DEFAULT 0xF0
+#define COLOR_DEFAULT 0xF0 
 
 
 // *****HAMKHAIBAO*****
@@ -39,3 +39,5 @@ void DrawMenuItem(int index, bool is_selected);
 void DrawFullMenu(int selected_index);
 void DrawFullPauseMenu(int selected);
 void DrawPauseMenuItem(int index, bool is_selected);
+void StartAbout();
+void StartGuide();
