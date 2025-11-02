@@ -200,7 +200,6 @@ void ShowCursorForBoard() {
 void StartAbout() {
 	//set to UTF16 text cout
 
-	//DrawObject("Background");//
 	system("cls");
 	GabageCollect();
 	_setmode(_fileno(stdout), _O_U16TEXT);
