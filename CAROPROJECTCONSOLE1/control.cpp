@@ -9,6 +9,8 @@
 #include "GameState.h"
 #include <io.h>
 #include <fcntl.h>
+#include "truecolor_utils.h"
+
 void StartGame() {
 	system("cls");
 	ResetData(); // Khoi tao du lieu goc
@@ -83,5 +85,3 @@ void InitConsole() {
 void ShowCursorForBoard() {
 	SetCursorVisible(true);
 }
-
-

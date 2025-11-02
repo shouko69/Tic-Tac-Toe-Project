@@ -2,6 +2,16 @@
 #include "view.h"
 #include <conio.h>
 #include <ctype.h>
+#include "Windows.h"
+#include "Model.h"
+#include "Control.h"
+#include <iostream>
+#include <string>
+#include "truecolor_utils.h"
+#include "GameState.h" 
+#include <io.h>       
+#include <fcntl.h> 
+#include <stdlib.h>
 extern const int TOTAL_ITEMS;
 extern const int TOTAL_PAUSE_ITEMS;
 
@@ -81,6 +91,30 @@ int HandlePauseMenuInput() {
         if (selected != old_selected) {
             DrawPauseMenuItem(old_selected, false); // Mục cũ: bỏ chọn
             DrawPauseMenuItem(selected, true);      // Mục mới: chọn
+        }
+    }
+}
+
+
+void ScreenHandle(GameState nextState) {
+    bool checkTheKeys = true;
+    while (checkTheKeys)
+    {
+        if (_kbhit())
+        {
+            switch (_getch())
+            {
+            case 13: //Enter 
+                checkTheKeys = false;
+                break;
+            case 27: //ESC
+                checkTheKeys = false;
+                currentState = nextState; // Trỏ đến trạng thái tiếp theo
+                SetCursorVisible(false); // Ẩn con trỏ ở Menu
+                break;
+            default:
+                break;
+            };
         }
     }
 }

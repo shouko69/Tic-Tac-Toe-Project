@@ -12,4 +12,5 @@ int TestBoard();
 int CheckBoard(int pX, int pY);
 bool IsFullBoard();
 bool CheckWin();
+void onePlayerAlgorithm();
 
