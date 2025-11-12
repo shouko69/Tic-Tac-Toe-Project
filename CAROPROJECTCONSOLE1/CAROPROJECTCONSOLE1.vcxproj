@@ -129,10 +129,15 @@
     <ClCompile Include="control.cpp" />
     <ClCompile Include="HandleInput.cpp" />
     <ClCompile Include="model.cpp" />
+    <ClCompile Include="SaveLoad.cpp" />
+    <ClCompile Include="SaveLoadUI.cpp" />
     <ClCompile Include="view.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="control.h" />
+    <ClInclude Include="SaveLoad.h" />
+    <ClInclude Include="SaveLoadUI.h" />
+    <ClInclude Include="truecolor_utils.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="HandleInput.h" />
     <ClInclude Include="model.h" />

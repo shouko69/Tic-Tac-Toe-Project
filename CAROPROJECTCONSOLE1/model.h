@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #define BOARD_SIZE 12 // kich thuoc ban co;
 struct _POINT { int x, y, c; }; // x: toa do dong`, y: toa do cot, c: danh dau

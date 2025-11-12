@@ -1,11 +1,21 @@
 ﻿#pragma once
 #include "model.h"
+#include <windows.h>
 #include <string>
 //*****BIENTOANCUC*****
-#define CONSOLE_WIDTH 150  
-#define CONSOLE_HEIGHT 39 
-#define LEFT ((CONSOLE_WIDTH - BOARD_SIZE) / 3) // Toa do trai man hinh ban co
-#define TOP (((CONSOLE_HEIGHT - BOARD_SIZE) / 3) - 2) // Toa do tren man hinh ban co
+#define CONSOLE_WIDTH 190
+#define CONSOLE_HEIGHT 45
+// --- BƯỚC 2: KÍCH THƯỚC VẼ CỦA 1 Ô ---
+#define CELL_VISUAL_WIDTH 4
+#define CELL_VISUAL_HEIGHT 2
+
+// --- BƯỚC 3: TỰ ĐỘNG TÍNH TOÁN KÍCH THƯỚC THỰC TẾ (VISUAL) ---
+#define BOARD_VISUAL_WIDTH (BOARD_SIZE * CELL_VISUAL_WIDTH + 1)
+#define BOARD_VISUAL_HEIGHT (BOARD_SIZE * CELL_VISUAL_HEIGHT + 1)
+
+// --- BƯỚC 4: CÔNG THỨC CĂN GIỮA CHÍNH XÁC ---
+#define LEFT ((CONSOLE_WIDTH - BOARD_VISUAL_WIDTH) / 2)
+#define TOP  ((CONSOLE_HEIGHT - BOARD_VISUAL_HEIGHT) / 2)
 
 // --- CÁC HẰNG SỐ CỦA MENU ---
 extern const char* MENU_ITEMS[];
@@ -16,21 +26,20 @@ extern const char* PAUSE_ITEMS[];
 extern const int PAUSE_START_Y;
 extern const char* LOGO_LINE; 
 
-// --- CÁC MÃ MÀU (Nền Trắng = 15) ---
-#define COLOR_TITLE_TEXT (15 * 16 + 9) //Xanh Sáng
-#define COLOR_NORMAL_TEXT   (15 * 16 + 0)  // Đen trên Nền Trắng (240)
-#define COLOR_LOGO_FRAME    (15 * 16 + 12) // Đỏ trên Nền Trắng (252)
-#define COLOR_GUIDE         (15 * 16 + 8)  // Xám trên Nền Trắng (248)
-#define COLOR_SELECTED_BG   (14 * 16 + 0)  // Nền VÀNG (14), Chữ ĐEN (0)
-#define COLOR_UNSELECTED_BG (15 * 16 + 0)  // Nền TRẮNG (15), Chữ ĐEN (0)
-#define COLOR_DEFAULT 0xF0
 
+// (Ví dụ: Tím than R:80, G:60, B:120)
+// (Ví dụ: Hồng Neon R:255, G:100, B:180)
+// (Ví dụ: Trắng R:255, G:255, B:255)
 
+// --- Các hàm thiết lập console ---
+bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY);
+void ResizeConsoleWindow(int width, int height);
+void FixConsoleWindow(); 
+void CenterConsole();
 // *****HAMKHAIBAO*****
 extern int CenterX(const std::string& text);
 extern void GotoXY(int x, int y);
-extern void SetColor(int color);
-void FixConsoleWindow();
+
 void DrawBoard(int pSize);
 void RedrawBoardState();
 int ProcessFinish(int pWhoWin);
@@ -39,3 +48,8 @@ void DrawMenuItem(int index, bool is_selected);
 void DrawFullMenu(int selected_index);
 void DrawFullPauseMenu(int selected);
 void DrawPauseMenuItem(int index, bool is_selected);
+void StartAbout();
+// ****CÁC HÀM VẼ UI MỚI****
+void DrawTableCellRGB(const std::string& text, int x, int y, int width, int text_r, int text_g, int text_b, int bg_r, int bg_g, int bg_b);
+void ClearScreenWithColor(int r, int g, int b);
+

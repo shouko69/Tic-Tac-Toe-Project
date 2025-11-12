@@ -9,42 +9,58 @@
 #include "GameState.h"
 #include <io.h>
 #include <fcntl.h>
+#include <chrono>
+#include "truecolor_utils.h"
+
 void StartGame() {
-	system("cls");
+	// Bước 1: Dọn dẹp màn hình cũ và chuẩn bị nền trắng cho bàn cờ.
+	// Lệnh này vừa đặt nền trắng, vừa xóa sạch mọi thứ.
+	ClearScreenWithColor(255, 255, 255);
+	SetColorRGB(0, 0, 0);
 	ResetData(); // Khoi tao du lieu goc
 	DrawBoard(BOARD_SIZE); // Ve man hinh game
 	GotoXY(_X, _Y);
 }
 
 void ExitGame() {
-	system("cls");
+	// Bước 1: Đưa màu sắc của console về trạng thái mặc định.
+	ResetColor();
+	// Bước 2: Xóa màn hình về nền đen (màu console mặc định) cho sạch sẽ.
+// Lệnh này an toàn hơn system("cls") rất nhiều.
+	ClearScreenWithColor(0, 0, 0);
 	GabageCollect();
 	// co the luu game trc khi exit
 }
 
 void MoveRight() {
-	if (_X < _A[BOARD_SIZE - 1][BOARD_SIZE - 1].x) {
+	// Tọa độ X của cột cuối cùng là: LEFT + (số cột - 1) * 4
+	int right_boundary = LEFT + (BOARD_SIZE - 1) * 4;
+	if (_X < right_boundary) {
 		_X += 4;
 		GotoXY(_X, _Y);
 	}
 }
 
 void MoveLeft() {
-	if (_X > _A[0][0].x) {
+	// Tọa độ X của cột đầu tiên là LEFT
+	if (_X > LEFT + 2) {
 		_X -= 4;
 		GotoXY(_X, _Y);
 	}
 }
 
 void MoveDown() {
-	if (_Y < _A[BOARD_SIZE - 1][BOARD_SIZE - 1].y) {
+	// Tọa độ Y của hàng cuối cùng là: TOP + (số hàng - 1) * 2
+	int bottom_boundary = TOP + (BOARD_SIZE - 1) * 2;
+	if (_Y < bottom_boundary) {
 		_Y += 2;
 		GotoXY(_X, _Y);
 	}
 }
 
 void MoveUp() {
-	if (_Y > _A[0][0].y) {
+	// Tọa độ Y của hàng đầu tiên là TOP
+	if (_Y > TOP + 1) {
 		_Y -= 2;
 		GotoXY(_X, _Y);
 	}
@@ -63,25 +79,10 @@ void SetCursorVisible(bool visible) {
 // Hàm InitConsole chuẩn
 void InitConsole() {
 	system("chcp 65001");
-	
-	// 2. Nền trắng, chữ đen mặc định
-	system("color F0");
-
-	// 3. Tạm thời ẩn con trỏ (menu)
 	SetCursorVisible(false);
-
-	// 4️ Mở rộng vùng buffer (nếu không, sẽ bị giới hạn khi set window)
-	COORD bufferSize = { 150, 40 }; // muốn to bao nhiêu tùy
-	SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), bufferSize);
-
-	// 5️ Đặt kích thước cửa sổ console
-	SMALL_RECT windowSize = { 0, 0, 149, 39 }; //  giá trị phải nhỏ hơn bufferSize
-	SetConsoleWindowInfo(GetStdHandle(STD_OUTPUT_HANDLE), TRUE, &windowSize);
 }
 
 // Khi vào bàn cờ hoặc chỗ cần con trỏ hiện
 void ShowCursorForBoard() {
 	SetCursorVisible(true);
 }
-
-

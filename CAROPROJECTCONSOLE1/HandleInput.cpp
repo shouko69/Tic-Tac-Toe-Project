@@ -6,7 +6,8 @@ extern const int TOTAL_ITEMS;
 extern const int TOTAL_PAUSE_ITEMS;
 
 int HandleMainMenuInput() {
-    
+    ClearScreenWithColor(255, 255, 255);
+
     // 1. VẼ TOÀN BỘ MENU (CHỈ GỌI MỘT LẦN)
     // Hàm này sẽ vẽ LOGO, khung, hướng dẫn và mục menu đầu tiên (selected=0).
     DrawFullMenu(0); 
@@ -47,7 +48,7 @@ int HandleMainMenuInput() {
     }
 }
 int HandlePauseMenuInput() {
-
+    ClearScreenWithColor(255, 255, 255);
     // 1. VẼ TOÀN BỘ PAUSE MENU (CHỈ GỌI MỘT LẦN)
     DrawFullPauseMenu(0); // Vẽ toàn bộ menu Pause, mục đầu tiên selected = 0
 
