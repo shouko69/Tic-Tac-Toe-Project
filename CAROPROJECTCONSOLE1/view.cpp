@@ -4,32 +4,32 @@
 #include "Model.h"
 #include "Control.h"
 #include <iostream>
-#include <iomanip>   
+#include <iomanip>    
 #include <string>
 #include "truecolor_utils.h"
-#include <fcntl.h>
-#include <io.h>
+// #include <fcntl.h> // Không cần nữa
+// #include <io.h> // Không cần nữa
 #include "GameState.h"
-#include <cwchar> // THÊM VÀO: Thư viện cần thiết cho hàm SetConsoleFont
-
-
+#include <cwchar> // Cần cho SetConsoleFont
+#include <thread> // Cần cho hiệu ứng (nếu có)
+#include <chrono> // Cần cho hiệu ứng (nếu có)
 
 
 using namespace std;
 const char* MENU_ITEMS[] = { "NEW GAME", "LOAD GAME", "SETTING", "GUIDE", "ABOUT", "EXIT" };
 const char* PAUSE_ITEMS[] = { "RESUME", "RESTART", "SAVE", "SETTINGS", "QUIT" };
 const int TOTAL_ITEMS = sizeof(MENU_ITEMS) / sizeof(MENU_ITEMS[0]);
-const int START_Y = 15; /*const int START_Y = 15;*/
-
+const int START_Y = 15;
 const int TOTAL_PAUSE_ITEMS = sizeof(PAUSE_ITEMS) / sizeof(PAUSE_ITEMS[0]);
-const int PAUSE_START_Y = 9;/* const int PAUSE_START_Y = 9;*/
-const int FRAME_START_X = 99; // Tọa độ X nơi các khung menu bắt đầu
-const int FRAME_WIDTH = 28;   // Chiều rộng của khung menu
-// Ký tự vẽ khung (ĐÃ XÓA - SẼ SỬ DỤNG TRỰC TIẾP)
+const int PAUSE_START_Y = 9;
+const int FRAME_START_X = 99;
+const int FRAME_WIDTH = 28;
+const char* LOGO_LINE = "CARO LEGENDS";
 
 _POINT _A[BOARD_SIZE][BOARD_SIZE];
 bool _TURN = true;
 
+// --- HÀM HỖ TRỢ (Giữ nguyên) ---
 
 bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -44,47 +44,31 @@ bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY) {
     return true;
 }
 
-
 void ResizeConsoleWindow(int width, int height) {
     HWND consoleWindow = GetConsoleWindow();
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    // Đặt kích thước buffer
     COORD bufferSize = { (SHORT)width, (SHORT)height };
     SetConsoleScreenBufferSize(hConsole, bufferSize);
-
-    // Đặt kích thước cửa sổ
     SMALL_RECT windowSize = { 0, 0, (SHORT)(width - 1), (SHORT)(height - 1) };
     SetConsoleWindowInfo(hConsole, TRUE, &windowSize);
 }
-// ***** HÀM MỚI 3: TỰ ĐỘNG CANH GIỮA CỬA SỔ CONSOLE *****
-void CenterConsole() {
-    // 1. Lấy handle của cửa sổ console
-    HWND consoleWindow = GetConsoleWindow();
-    if (consoleWindow == NULL) {
-        return; // Không tìm thấy cửa sổ
-    }
 
-    // 2. Lấy kích thước hiện tại của cửa sổ console (tính bằng pixel)
+void CenterConsole() {
+    HWND consoleWindow = GetConsoleWindow();
+    if (consoleWindow == NULL) return;
     RECT rectClient;
     GetWindowRect(consoleWindow, &rectClient);
     int windowWidth = rectClient.right - rectClient.left;
     int windowHeight = rectClient.bottom - rectClient.top;
-
-    // 3. Lấy kích thước của khu vực làm việc trên màn hình (đã trừ Taskbar)
     RECT rectScreen;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &rectScreen, 0);
     int screenWidth = rectScreen.right - rectScreen.left;
     int screenHeight = rectScreen.bottom - rectScreen.top;
-
-    // 4. Tính toán tọa độ X, Y mới để cửa sổ nằm giữa
     int newX = rectScreen.left + (screenWidth - windowWidth) / 2;
     int newY = rectScreen.top + (screenHeight - windowHeight) / 2;
-
-    // 5. Di chuyển cửa sổ đến vị trí mới
-    // MoveWindow(handle, X, Y, width, height, repaint)
     MoveWindow(consoleWindow, newX, newY, windowWidth, windowHeight, TRUE);
 }
+
 void FixConsoleWindow() {
     HWND consoleWindow = GetConsoleWindow();
     LONG style = GetWindowLong(consoleWindow, GWL_STYLE);
@@ -112,48 +96,111 @@ int CenterX(const std::string& text) {
     return x > 0 ? x : 0;
 }
 
+// --- HÀM "SƠN" NỀN (Phiên bản cuối cùng, flicker-free) ---
+// (ĐÃ XÓA HÀM ClearScreen() GÂY CRASH Ở TRÊN)
+void ClearScreenWithColor(int r, int g, int b) {
+    SetBgRGB(r, g, b); // Đặt màu nền mong muốn
+
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD coordScreen = { 0, 0 }; // Góc trên bên trái
+    DWORD cCharsWritten;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    DWORD dwConSize;
+
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return;
+    dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
+
+    if (!FillConsoleOutputCharacter(hConsole, (TCHAR)' ', dwConSize, coordScreen, &cCharsWritten)) return;
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return;
+    if (!FillConsoleOutputAttribute(hConsole, csbi.wAttributes, dwConSize, coordScreen, &cCharsWritten)) return;
+
+    SetConsoleCursorPosition(hConsole, coordScreen);
+}
+
+// --- HÀM VẼ (ĐÃ SỬA LỖI) ---
+
+void StartIntro() {
+    ClearScreenWithColor(202, 196, 248); // "Sơn" nền Lavender
+    SetBgRGB(202, 196, 248); // Nền Lavender
+    SetColorRGB(0, 0, 0);   // Chữ Đen
+
+    // 2. Vẽ Logo (Dùng cout)
+    const int LOGO_PADDING = 4;
+    std::string logoStr(LOGO_LINE);
+    int frameWidth = logoStr.length() + LOGO_PADDING * 2;
+    int logoX = CenterX(logoStr);
+    int frameX = logoX - LOGO_PADDING - 1;
+
+    SetColorRGB(100, 100, 255); // Khung Tím/Xanh
+    GotoXY(frameX, 2);
+    std::cout << "╔";
+    for (int i = 0; i < frameWidth; i++) std::cout << "═";
+    std::cout << "╗";
+    GotoXY(frameX, 3);
+    std::cout << "║";
+    GotoXY(logoX, 3);
+    SetColorRGB(0, 0, 0); // Chữ logo đen
+    std::cout << logoStr;
+    SetColorRGB(100, 100, 255); // Khung tím
+    GotoXY(frameX + frameWidth + 1, 3);
+    std::cout << "║";
+    GotoXY(frameX, 4);
+    std::cout << "╚";
+    for (int i = 0; i < frameWidth; i++) std::cout << "═";
+    std::cout << "╝";
+
+    // 3. Vẽ dòng chữ "Press any key"
+    SetColorRGB(80, 80, 80); // Chữ xám
+    const char* prompt = "PRESS ANY KEY TO START";
+    GotoXY(CenterX(prompt), 20);
+    std::cout << prompt;
+
+    _getch();
+    ResetColor();
+}
+
 void StartAbout() {
-    SetColorRGB(255, 255, 255);
-    system("cls");
+    ClearScreenWithColor(202, 196, 248); // "Sơn" nền Lavender
+    SetColorRGB(0, 0, 0); // Chữ Đen
+
     int i = 55, offset = 1;
-    GabageCollect(); // nếu đây là hàm dọn rác custom của huynh thì giữ
 
-    // ✅ 1. Chuyển sang UTF16 để in Unicode (phải trước cout/wcout)
-    _setmode(_fileno(stdout), _O_U16TEXT);
+    // XÓA BỎ: _setmode(_fileno(stdout), _O_U16TEXT);
 
+    // SỬA LẠI: Dùng std::cout và chuỗi hẹp "..."
     GotoXY(i, 1);
-    wcout << L" █████╗ ██████╗  ██████╗ ██╗   ██╗████████╗\n"; GotoXY(i, 2);
-    wcout << L"██╔══██╗██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝\n"; GotoXY(i, 3);
-    wcout << L"███████║██████╔╝██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 4);
-    wcout << L"██╔══██║██╔══██╗██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 5);
-    wcout << L"██║  ██║██████╔╝╚██████╔╝╚██████╔╝   ██║   \n"; GotoXY(i, 6);
-    wcout << L"╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   \n";
+    std::cout << " █████╗ ██████╗  ██████╗ ██╗   ██╗████████╗\n"; GotoXY(i, 2);
+    std::cout << "██╔══██╗██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝\n"; GotoXY(i, 3);
+    std::cout << "███████║██████╔╝██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 4);
+    std::cout << "██╔══██║██╔══██╗██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 5);
+    std::cout << "██║  ██║██████╔╝╚██████╔╝╚██████╔╝   ██║   \n"; GotoXY(i, 6);
+    std::cout << "╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   \n";
 
     COORD tableCoord{ 40, 10 };
     i = 0;
     GotoXY(tableCoord.X + 5, tableCoord.Y);
-    wcout << L"Welcome to the Gomoku Game - made by team 6 - 25CTT3 - HCMUS\n";
+    std::cout << "Welcome to the Gomoku Game - made by team 6 - 25CTT3 - HCMUS\n";
 
+    // ... (Sửa tất cả wcout thành cout) ...
     i += 2;
     GotoXY(tableCoord.X, tableCoord.Y + i);
-    wcout << L"25120215 - Nguyễn Minh Nhật \t\t PvE Mode - Game Content\n";
+    std::cout << "25120215 - Nguyen Minh Nhat      \t\t PvE Mode - Game Content\n";
     i += offset;
     GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Nguyễn Hoàng Huy\t\t Game Interface Design\n";
+    std::cout << "25120215 - Nguyen Hoang Huy     \t\t Game Interface Design\n";
     i += offset;
     GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Vũ Thanh Phong\t\t Game Graphic Design - Game Flow Design\n";
+    std::cout << "25120215 - Vu Thanh Phong      \t\t Game Graphic Design - Game Flow Design\n";
     i += offset;
     GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Đỗ Lê Nhật Quang\t\t Game Interface Design - Game Sound\n";
+    std::cout << "25120215 - Do Le Nhat Quang    \t\t Game Interface Design - Game Sound\n";
     i += offset;
     GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Nguyễn Phú Quang\t\t Load & Save Game\n";
+    std::cout << "25120215 - Nguyen Phu Quang    \t\t Load & Save Game\n";
     i += offset;
     GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Nguyễn Vũ Nhật Quang\t\t Game Graphic Design\n";
+    std::cout << "25120215 - Nguyen Vu Nhat Quang \t\t Game Graphic Design\n";
 
-    // ✅ 3. Vòng chờ phím bấm
     while (true) {
         if (_kbhit()) {
             int key = _getch();
@@ -162,29 +209,21 @@ void StartAbout() {
         Sleep(50);
     }
 
-    // ✅ 4. Trả chế độ xuất về bình thường (O_TEXT)
-    _setmode(_fileno(stdout), _O_TEXT);
+    // XÓA BỎ: _setmode(_fileno(stdout), _O_TEXT);
 
-    // ✅ 5. Không cần _getch() nữa (vì trên đã chờ phím)
-    system("cls");
-    // SceneHandle("MAIN MENU"); // nếu huynh có hàm menu chính
+    // Không cần system("cls") vì currentState sẽ vẽ lại
     currentState = MENU;
 }
 
-
-// --- VẼ BÀN CỜ ---
 void DrawBoard(int pSize) {
-    // Vòng lặp này sẽ đi qua từng "giao điểm" trên lưới caro
-    SetColorRGB(0, 0, 0);
+    SetColorRGB(0, 0, 0); // Viền đen
     for (int j = 0; j <= pSize; j++) {
         for (int i = 0; i <= pSize; i++) {
-
-            // Tính toán tọa độ chính xác của từng giao điểm trên màn hình
             int x = LEFT + 4 * i;
             int y = TOP + 2 * j;
             GotoXY(x, y);
 
-            // --- Xác định vị trí để vẽ ký tự phù hợp (ĐÃ THAY THẾ) ---
+            // SỬA LẠI: Dùng std::cout
             if (i == 0 && j == 0) std::cout << "╔";
             else if (i == pSize && j == 0) std::cout << "╗";
             else if (i == 0 && j == pSize) std::cout << "╚";
@@ -195,12 +234,9 @@ void DrawBoard(int pSize) {
             else if (i == pSize) std::cout << "╣";
             else std::cout << "╬";
 
-            // 2. Nếu đây không phải cột cuối cùng, vẽ 3 đường gạch ngang "---"
             if (i < pSize) {
-                std::cout << "═══"; // Thay vì 3 lần FRAME_HORIZONTAL
+                std::cout << "═══";
             }
-
-            // 3. Nếu đây không phải hàng cuối cùng, vẽ 1 đường dọc "|" ở dưới
             if (j < pSize) {
                 GotoXY(x, y + 1);
                 std::cout << "║";
@@ -208,157 +244,124 @@ void DrawBoard(int pSize) {
         }
     }
 }
-// Nó đọc Model (_Board[][]) và in ra tất cả X, O
-// Đặt hàm này trong file View.cpp hoặc file tương tự
+
 void RedrawBoardState() {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            // Lấy tọa độ màn hình từ chỉ số mảng
-            int screenX = LEFT + j * 4 + 2; // Tọa độ X để vẽ
-            int screenY = TOP + i * 2 + 1;  // Tọa độ Y để vẽ
-
-            GotoXY(screenX, screenY); // Di chuyển đến đúng ô
-
-            if (_A[i][j].c == -1) { // Nếu là quân X
+            int screenX = LEFT + j * 4 + 2;
+            int screenY = TOP + i * 2 + 1;
+            GotoXY(screenX, screenY);
+            if (_A[i][j].c == -1) {
                 SetColorRGB(255, 0, 0); // Màu đỏ
                 std::cout << "X";
             }
-            else if (_A[i][j].c == 1) { // Nếu là quân O
+            else if (_A[i][j].c == 1) {
                 SetColorRGB(0, 0, 255); // Màu xanh
                 std::cout << "O";
             }
-            // Nếu là 0 (ô trống) thì không làm gì cả
         }
     }
-    // Sau khi vẽ xong, đặt lại màu mặc định
-    SetColorRGB(0, 0, 0);
+    SetColorRGB(0, 0, 0); // Reset màu chữ về đen
+    GotoXY(_X, _Y);
 }
-// --- XỬ LÝ KẾT THÚC TRÒ CHƠI ---
-int ProcessFinish(int pWhoWin) {
-    // Tọa độ X bên phải bàn cờ (giữ nguyên)
-    const int MESSAGE_X = LEFT + 4 * BOARD_SIZE + 5;
 
-    // Tọa độ Y MỚI để căn giữa theo chiều dọc
-    // TOP là điểm bắt đầu, BOARD_SIZE là nửa chiều cao của bàn cờ (vì mỗi ô cao 2 dòng)
+int ProcessFinish(int pWhoWin) {
+    const int MESSAGE_X = LEFT + 4 * BOARD_SIZE + 5;
     const int MIDDLE_Y = TOP + BOARD_SIZE;
 
-    // Đặt con trỏ vào vị trí mới
+    SetColorRGB(0, 0, 0); // Chữ đen
     GotoXY(MESSAGE_X, MIDDLE_Y);
 
     switch (pWhoWin) {
     case -1:
-        std::cout << "                                                  "; // Xóa dòng cũ
+        std::cout << "                                              ";
         GotoXY(MESSAGE_X, MIDDLE_Y);
         std::cout << "Nguoi choi X da thang, nguoi choi O da thua";
         break;
     case 1:
-        std::cout << "                                                  "; // Xóa dòng cũ
+        std::cout << "                                              ";
         GotoXY(MESSAGE_X, MIDDLE_Y);
         std::cout << "Nguoi choi O da thang, nguoi choi X da thua";
         break;
     case 0:
-        std::cout << "                                                  "; // Xóa dòng cũ
+        std::cout << "                                              ";
         GotoXY(MESSAGE_X, MIDDLE_Y);
         std::cout << "Hoa!";
         break;
     case 2:
         _TURN = !_TURN;
-        // Xóa thông báo cũ khi ván đấu tiếp tục
         GotoXY(MESSAGE_X, MIDDLE_Y);
-        std::cout << "                                                  ";
-        GotoXY(MESSAGE_X, MIDDLE_Y + 2); // Cũng xóa dòng hỏi Y/N
-        std::cout << "                                                  ";
+        std::cout << "                                              ";
+        GotoXY(MESSAGE_X, MIDDLE_Y + 2);
+        std::cout << "                                              ";
         break;
     }
-
-    // Đưa con trỏ về lại vị trí hiện tại trên bàn cờ
     GotoXY(_X, _Y);
     return pWhoWin;
 }
 
-// --- HỎI TIẾP TỤC ---
 int AskContinue() {
-    // Tọa độ X bên phải (giữ nguyên)
     const int MESSAGE_X = LEFT + 4 * BOARD_SIZE + 5;
-
-    // Tọa độ Y MỚI, nằm ngay dưới dòng thông báo ở giữa
     const int MIDDLE_Y = TOP + BOARD_SIZE;
-
-    // Đặt vị trí con trỏ ở dòng dưới (MIDDLE_Y + 2)
     GotoXY(MESSAGE_X, MIDDLE_Y + 2);
 
+    SetColorRGB(0, 0, 0); // Chữ đen
     std::cout << "Nhan 'Y/N' de tiep tuc/dung: ";
     return toupper(_getch());
 }
 
-// --- VẼ MỘT MỤC MENU ---
-// VẼ MỘT MỤC MENU VỚI HIỆU ỨNG “PHỒNG”
 void DrawMenuItem(int index, bool is_selected) {
     if (index < 0 || index >= TOTAL_ITEMS) return;
 
-    // 1. Chỉ lấy text gốc, không thêm ">>" hay "  "
     std::string menuText = std::string(MENU_ITEMS[index]);
 
-    // 2. Quyết định màu sắc
     if (is_selected) {
-        SetColorRGB(255, 100, 180); // Màu chữ NỔI BẬT
+        SetColorRGB(255, 100, 180); // Chữ NỔI BẬT (Hồng)
     }
     else {
-        SetColorRGB(80, 60, 120); // Màu chữ BÌNH THƯỜNG
+        SetColorRGB(80, 60, 120); // Chữ BÌNH THƯỜNG (Tím than)
     }
 
+    SetBgRGB(203, 196, 248); // Nền Lavender (mã màu từ code cũ)
 
-    SetBgRGB(203, 196, 248);
-    // 2. Tính toán tọa độ X để canh giữa KHUNG chứ không phải màn hình
     int text_length = menuText.length();
     int x = FRAME_START_X + (FRAME_WIDTH - text_length) / 2;
-
     int y = START_Y + index * 2 + 5;
 
     GotoXY(x, y);
     std::cout << menuText;
 }
 
-// --- VẼ TOÀN BỘ MENU ---
-
-// --- VẼ TOÀN BỘ MENU ---
 void DrawFullMenu(int selected_index) {
+    ClearScreenWithColor(203, 196, 248); // "Sơn" nền Lavender
 
-    // 1. Đặt màu nền tím và tô toàn bộ màn hình
-    ClearScreenWithColor(203, 196, 248);
-    
     int i = 25;
     GotoXY(i, 1);
     SetColorRGB(163, 87, 213);
-    _setmode(_fileno(stdout), _O_U16TEXT);
-    std::wcout << L"████████╗██╗  ██╗███████╗     ██████╗ █████╗ ██████╗  ██████╗      ██████╗  █████╗ ███╗   ███╗███████╗\n"; GotoXY(i, 2);
-    std::wcout << L"╚══██╔══╝██║  ██║██╔════╝    ██╔════╝██╔══██╗██╔══██╗██╔═══██╗    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝\n"; GotoXY(i, 3);
-    std::wcout << L"   ██║   ███████║█████╗      ██║     ███████║██████╔╝██║   ██║    ██║  ███╗███████║██╔████╔██║█████╗  \n"; GotoXY(i, 4);
-    std::wcout << L"   ██║   ██╔══██║██╔══╝      ██║     ██╔══██║██╔══██╗██║   ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  \n"; GotoXY(i, 5);
-    std::wcout << L"   ██║   ██║  ██║███████╗    ╚██████╗██║  ██║██║  ██║╚██████╔╝    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗\n"; GotoXY(i, 6);
-    std::wcout << L"   ╚═╝   ╚═╝  ╚═╝╚══════╝     ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝\n";
-    _setmode(_fileno(stdout), _O_TEXT); // Trả về chế độ thường
 
-    
-   
+    // XÓA BỎ: _setmode(_fileno(stdout), _O_U16TEXT);
 
-    // --- 3. VẼ MENU ---
-    // (Giữ nguyên code vẽ menu)
+    // SỬA LẠI: Dùng std::cout
+    std::cout << "████████╗██╗  ██╗███████╗     ██████╗ █████╗ ██████╗  ██████╗     ██████╗  █████╗ ███╗   ███╗███████╗\n"; GotoXY(i, 2);
+    std::cout << "╚══██╔══╝██║  ██║██╔════╝     ██╔════╝██╔══██╗██╔══██╗██╔═══██╗    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝\n"; GotoXY(i, 3);
+    std::cout << "   ██║   ███████║█████╗       ██║     ███████║██████╔╝██║   ██║    ██║  ███╗███████║██╔████╔██║█████╗  \n"; GotoXY(i, 4);
+    std::cout << "   ██║   ██╔══██║██╔══╝       ██║     ██╔══██║██╔══██╗██║   ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  \n"; GotoXY(i, 5);
+    std::cout << "   ██║   ██║  ██║███████╗     ╚██████╗██║  ██║██║  ██║╚██████╔╝    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗\n"; GotoXY(i, 6);
+    std::cout << "   ╚═╝   ╚═╝  ╚═╝╚══════╝      ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝\n";
+
+    // XÓA BỎ: _setmode(_fileno(stdout), _O_TEXT);
+
     for (int i = 0; i < TOTAL_ITEMS; i++) {
         DrawMenuItem(i, i == selected_index);
     }
-
-    
 }
 
-// --- VẼ TỪNG MỤC PAUSE MENU (PHIÊN BẢN TRUECOLOR) ---
+// --- VẼ TỪNG MỤC PAUSE MENU (ĐÃ SỬA THEO truecolor_utils.h) ---
 void DrawPauseMenuItem(int index, bool is_selected) {
     if (index < 0 || index >= TOTAL_PAUSE_ITEMS) return;
 
-    // 1. Chỉ lấy text gốc
     std::string text = std::string(PAUSE_ITEMS[index]);
 
-    // 2. Quyết định màu sắc
     if (is_selected) {
         SetColorRGB(255, 100, 180); // Màu chữ NỔI BẬT (Hồng)
     }
@@ -366,27 +369,29 @@ void DrawPauseMenuItem(int index, bool is_selected) {
         SetColorRGB(80, 60, 120); // Màu chữ BÌNH THƯỜNG (Tím than)
     }
 
-    // 3. Căn giữa và in
+    // Đặt nền trắng (như code cũ)
+    SetBgRGB(255, 255, 255);
+
     int x = CenterX(text);
     int y = PAUSE_START_Y + index * 2;
     GotoXY(x, y);
     std::cout << text;
 }
 
-// --- VẼ TOÀN BỘ PAUSE MENU (PHIÊN BẢN TRUECOLOR) ---
+// --- VẼ TOÀN BỘ PAUSE MENU (ĐÃ SỬA THEO truecolor_utils.h) ---
 void DrawFullPauseMenu(int selected_index) {
-    // 1. Đặt màu nền tím và xóa màn hình
+    // 1. Đặt nền trắng và xóa màn hình
     ClearScreenWithColor(255, 255, 255);
 
-    // --- 2. VẼ TIÊU ĐỀ (Đã bỏ khung) ---
+    // --- 2. VẼ TIÊU ĐỀ ---
     const std::string title = "GAME PAUSED";
-    SetColorRGB(0, 0, 0); // Chữ tiêu đề màu trắng
+    SetColorRGB(0, 0, 0); // Chữ tiêu đề màu đen
     GotoXY(CenterX(title), 4);
     std::cout << title;
 
     // --- 3. VẼ DANH SÁCH MENU ---
     for (int i = 0; i < TOTAL_PAUSE_ITEMS; i++) {
-        DrawPauseMenuItem(i, i == selected_index); // Gọi hàm TrueColor mới
+        DrawPauseMenuItem(i, i == selected_index);
     }
 
     // --- 4. HƯỚNG DẪN ---
@@ -395,7 +400,8 @@ void DrawFullPauseMenu(int selected_index) {
     GotoXY(CenterX(guide), PAUSE_START_Y + TOTAL_PAUSE_ITEMS * 2 + 3);
     std::cout << guide;
 }
-//****HAIHAMMOI****
+
+// --- HÀM VẼ KHÁC ---
 void DrawTableCellRGB(const std::string& text, int x, int y, int width, int text_r, int text_g, int text_b, int bg_r, int bg_g, int bg_b) {
     SetBgRGB(bg_r, bg_g, bg_b);
     GotoXY(x, y);
@@ -405,38 +411,4 @@ void DrawTableCellRGB(const std::string& text, int x, int y, int width, int text
     SetColorRGB(text_r, text_g, text_b);
     GotoXY(x + 1, y);
     std::cout << text;
-}
-// Đặt hàm này vào View.h hoặc truecolor_utils.h
-void ClearScreenWithColor(int r, int g, int b) {
-    SetBgRGB(r, g, b); // Đặt màu nền mong muốn
-
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    COORD coordScreen = { 0, 0 }; // Góc trên bên trái
-    DWORD cCharsWritten;
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    DWORD dwConSize;
-
-    // Lấy thông tin kích thước của màn hình console
-    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) {
-        return;
-    }
-    dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
-
-    // Lấp đầy toàn bộ màn hình bằng ký tự trống (' ')
-    if (!FillConsoleOutputCharacter(hConsole, (TCHAR)' ', dwConSize, coordScreen, &cCharsWritten)) {
-        return;
-    }
-
-    // Lấy thuộc tính màu hiện tại
-    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) {
-        return;
-    }
-
-    // Áp dụng thuộc tính màu đó cho toàn bộ màn hình
-    if (!FillConsoleOutputAttribute(hConsole, csbi.wAttributes, dwConSize, coordScreen, &cCharsWritten)) {
-        return;
-    }
-
-    // Đưa con trỏ về vị trí đầu
-    SetConsoleCursorPosition(hConsole, coordScreen);
 }

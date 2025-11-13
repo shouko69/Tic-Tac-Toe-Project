@@ -52,4 +52,4 @@ void StartAbout();
 // ****CÁC HÀM VẼ UI MỚI****
 void DrawTableCellRGB(const std::string& text, int x, int y, int width, int text_r, int text_g, int text_b, int bg_r, int bg_g, int bg_b);
 void ClearScreenWithColor(int r, int g, int b);
-
+void StartIntro();

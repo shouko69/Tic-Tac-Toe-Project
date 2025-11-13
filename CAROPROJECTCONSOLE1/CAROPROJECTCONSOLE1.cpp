@@ -30,8 +30,8 @@ int main() {
     // Khóa kích thước cửa sổ để người dùng không thay đổi được
     FixConsoleWindow();
     // Hỗ trợ ký tự Unicode (cho các ký tự vẽ vời phức tạp)
-    
     InitConsole(); 
+    StartIntro();
     CenterConsole();
    
 
