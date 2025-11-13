@@ -119,12 +119,14 @@ void ClearScreenWithColor(int r, int g, int b) {
 
 // --- HÀM VẼ (ĐÃ SỬA LỖI) ---
 
+// --- VẼ MÀN HÌNH BẮT ĐẦU (VỚI LOADING BAR) ---
 void StartIntro() {
-    ClearScreenWithColor(202, 196, 248); // "Sơn" nền Lavender
+    // 1. "Sơn" toàn bộ màn hình bằng màu Lavender
+    ClearScreenWithColor(202, 196, 248);
     SetBgRGB(202, 196, 248); // Nền Lavender
     SetColorRGB(0, 0, 0);   // Chữ Đen
 
-    // 2. Vẽ Logo (Dùng cout)
+    // 2. Vẽ Logo (Code vẽ logo của bạn)
     const int LOGO_PADDING = 4;
     std::string logoStr(LOGO_LINE);
     int frameWidth = logoStr.length() + LOGO_PADDING * 2;
@@ -149,13 +151,86 @@ void StartIntro() {
     for (int i = 0; i < frameWidth; i++) std::cout << "═";
     std::cout << "╝";
 
-    // 3. Vẽ dòng chữ "Press any key"
-    SetColorRGB(80, 80, 80); // Chữ xám
-    const char* prompt = "PRESS ANY KEY TO START";
-    GotoXY(CenterX(prompt), 20);
-    std::cout << prompt;
+    // (Nếu bạn vẫn dùng hàm vẽ con mèo, hãy gọi nó ở đây)
+    // thecarogame(10, 10); 
 
-    _getch();
+    // 3. --- GIAI ĐOẠN LOADING BAR ---
+    int barWidth = 50; // Chiều rộng của thanh loading (50 ký tự)
+    int barY = 20;     // Vị trí Y của thanh loading
+    int barX = CenterX(std::string(barWidth + 2, ' ')); // Căn giữa thanh [....]
+
+    // 3a. Vẽ tiêu đề "LOADING..."
+    SetColorRGB(80, 80, 80); // Màu xám
+    GotoXY(CenterX("LOADING..."), barY - 2); // 2 dòng bên trên thanh
+    std::cout << "LOADING...";
+
+    // 3b. Vẽ khung thanh loading rỗng [....]
+    GotoXY(barX, barY);
+    std::cout << "[";
+    std::string emptyBar(barWidth, '.'); // Dùng dấu '.' làm nền rỗng
+    std::cout << emptyBar;
+    std::cout << "]";
+
+    // 3c. Vòng lặp "chạy" thanh loading
+    for (int i = 0; i <= barWidth; ++i) {
+        // Tính toán %
+        int percent = (int)(((float)i / barWidth) * 100);
+
+        // Vẽ khối loading (dùng nền xanh)
+        SetBgRGB(100, 100, 255); // Nền xanh cho khối
+        GotoXY(barX + 1 + i, barY); // Di chuyển con trỏ vào trong thanh
+        std::cout << " "; // In 1 khối (khoảng trắng có nền)
+
+        // Cập nhật số % (nền lavender, chữ xám)
+        SetBgRGB(202, 196, 248);
+        SetColorRGB(80, 80, 80);
+        GotoXY(barX + barWidth + 3, barY); // Vị trí bên phải thanh
+        std::cout << percent << "%"; // In %
+
+        // Tạo hiệu ứng chạy từ từ
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+
+    // Dừng 1 chút sau khi load xong
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+    // 4. --- GIAI ĐOẠN "PRESS ANY KEY" ---
+
+    // 4a. Xóa thanh loading và chữ "LOADING..."
+    SetBgRGB(202, 196, 248); // Đặt lại nền Lavender
+    std::string blank(barWidth + 10, ' ');
+    GotoXY(CenterX("LOADING..."), barY - 2);
+    std::cout << "          "; // Xóa chữ LOADING...
+    GotoXY(barX, barY);
+    std::cout << blank; // Xóa thanh loading và %
+
+    // 4b. Vẽ dòng chữ "Press any key" nhấp nháy
+    const char* prompt = "PRESS ANY KEY TO START";
+    int promptX = CenterX(prompt);
+    int promptY = 20; // Dùng lại vị trí cũ
+    bool showText = true;
+
+    while (true) {
+        if (_kbhit()) {
+            _getch();
+            break;
+        }
+        if (showText) {
+            SetColorRGB(80, 80, 80); // Màu xám
+            GotoXY(promptX, promptY);
+            std::cout << prompt;
+        }
+        else {
+            std::string blankPrompt(strlen(prompt), ' ');
+            SetBgRGB(202, 196, 248); // Nền Lavender
+            GotoXY(promptX, promptY);
+            std::cout << blankPrompt;
+        }
+        showText = !showText;
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    // 5. Reset màu sắc trước khi chuyển cảnh
     ResetColor();
 }
 
