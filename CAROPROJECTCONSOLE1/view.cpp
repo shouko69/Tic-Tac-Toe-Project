@@ -31,7 +31,57 @@ const int FRAME_WIDTH = 28;   // Chiều rộng của khung menu
 
 _POINT _A[BOARD_SIZE][BOARD_SIZE];
 bool _TURN = true;
+struct ColorTemp {
+    int r, g, b;
+    bool operator==(const ColorTemp& o) const { return r == o.r && g == o.g && b == o.b; }
+};
 
+// --- HÀM VẼ CHÍNH (Copy từ Graphics.cpp cũ sang) ---
+void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructionTrueColor>& data) {
+    if (data.empty()) return;
+
+    // 1. Tính kích thước
+    int width = 0, height = 0;
+    for (const auto& instr : data) {
+        width = (std::max)(width, instr.x + instr.l);
+        height = (std::max)(height, instr.y + 1);
+    }
+
+    // 2. Tạo lưới pixel
+    std::vector<std::vector<ColorTemp>> pixelGrid(height, std::vector<ColorTemp>(width, { 0, 0, 0 }));
+    for (const auto& instr : data) {
+        if (instr.y < height) {
+            for (int i = 0; i < instr.l; ++i) {
+                if (instr.x + i < width) pixelGrid[instr.y][instr.x + i] = { instr.r, instr.g, instr.b };
+            }
+        }
+    }
+    if (height % 2 != 0) { pixelGrid.push_back(std::vector<ColorTemp>(width, { 0, 0, 0 })); height++; }
+
+    // 3. Vẽ Half-block
+    std::string buffer;
+    ColorTemp lastTop = { -1,-1,-1 }, lastBot = { -1,-1,-1 };
+
+    for (int y = 0; y < height; y += 2) {
+        buffer += "\x1b[" + std::to_string(startY + (y / 2) + 1) + ";" + std::to_string(startX + 1) + "H";
+        for (int x = 0; x < width; ++x) {
+            ColorTemp top = pixelGrid[y][x];
+            ColorTemp bot = pixelGrid[y + 1][x];
+
+            if (!(bot == lastBot)) {
+                buffer += "\x1b[48;2;" + std::to_string(bot.r) + ";" + std::to_string(bot.g) + ";" + std::to_string(bot.b) + "m";
+                lastBot = bot;
+            }
+            if (!(top == lastTop)) {
+                buffer += "\x1b[38;2;" + std::to_string(top.r) + ";" + std::to_string(top.g) + ";" + std::to_string(top.b) + "m";
+                lastTop = top;
+            }
+            buffer += "▀";
+        }
+    }
+    buffer += "\x1b[0m";
+    std::cout << buffer << std::flush;
+}
 
 bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);

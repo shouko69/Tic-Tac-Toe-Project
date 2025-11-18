@@ -127,7 +127,7 @@
   <ItemGroup>
     <ClCompile Include="CAROPROJECTCONSOLE1.cpp" />
     <ClCompile Include="control.cpp" />
-    <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="GameAssets.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="SaveLoad.cpp" />
     <ClCompile Include="SaveLoadUI.cpp" />
@@ -135,7 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="control.h" />
-    <ClInclude Include="Graphics.h" />
+    <ClInclude Include="GameAssets.h" />
     <ClInclude Include="SaveLoad.h" />
     <ClInclude Include="SaveLoadUI.h" />
     <ClInclude Include="truecolor_utils.h" />

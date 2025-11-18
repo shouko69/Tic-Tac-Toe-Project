@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "model.h"
+#include <vector>
 #include <windows.h>
 #include <string>
 //*****BIENTOANCUC*****
@@ -29,11 +30,13 @@ extern const char* LOGO_LINE;
 extern const char* NEW_GAME_OPTIONS[];
 extern const int TOTAL_NEW_GAME_OPTIONS;
 
+// 1. Struct chứa dữ liệu màu (Copy vào đây)
+struct DrawInstructionTrueColor {
+    int y, x, r, g, b, l;
+};
 
-
-// (Ví dụ: Tím than R:80, G:60, B:120)
-// (Ví dụ: Hồng Neon R:255, G:100, B:180)
-// (Ví dụ: Trắng R:255, G:255, B:255)
+// 2. Khai báo hàm vẽ chung (Engine)
+void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructionTrueColor>& data);
 
 // --- Các hàm thiết lập console ---
 bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY);
