@@ -77,11 +77,11 @@ void DrawNewGameMenuItem(int index, bool is_selected);
 void DrawFullPlayerNameScreen();
 void UpdatePlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer);
 
-// ve thong tin choi game cho 2 players
-void Draw2PlayerUI();
+
 // hien thi result
 void DrawGameOverScreen(int selectedOption);
 
 void DrawStatic2P_UI();
 void UpdateDynamic2P_UI();
+void DrawGameUI();
 

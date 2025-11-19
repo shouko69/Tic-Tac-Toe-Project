@@ -121,7 +121,12 @@ bool ShowLoadGameScreen() {
                 }
 
                 // SỬA ĐỔI: Áp dụng màu nền đã xác định cho TẤT CẢ các ô trong hàng
-                DrawCenteredCell(saves[actualIndex].name, nameX, rowY, COL_WIDTH_NAME, 255, 255, 255, bg_r, bg_g, bg_b);
+                // Tạo chuỗi hiển thị tên 2 người đấu với nhau
+                char displayNames[50];
+                sprintf_s(displayNames, "%s vs %s", saves[actualIndex].p1Name, saves[actualIndex].p2Name);
+
+                // Vẽ chuỗi đó ra cột NAME
+                DrawCenteredCell(displayNames, nameX, rowY, COL_WIDTH_NAME, 255, 255, 255, bg_r, bg_g, bg_b);
                 DrawCenteredCell(saves[actualIndex].date, dateX, rowY, COL_WIDTH_DATE, 255, 255, 255, bg_r, bg_g, bg_b);
                 DrawCenteredCell(saves[actualIndex].type, typeX, rowY, COL_WIDTH_TYPE, 255, 255, 255, bg_r, bg_g, bg_b);
 
@@ -416,17 +421,35 @@ void PerformSave(const std::string& filename) {
  */
 GameStateData GetCurrentGameStateData() {
     GameStateData currentData;
+
+    // 1. Dữ liệu cơ bản (Cũ)
     currentData.currentPlayer = (_TURN ? -1 : 1);
     currentData.cursorX = _X;
     currentData.cursorY = _Y;
+
+    // --- 2. CHỖ NỐI DÂY QUAN TRỌNG (THÊM MỚI VÀO ĐÂY) ---
+    // Copy tên thật từ biến toàn cục vào gói tin save
+    strcpy_s(currentData.p1Name, MAX_NAME_LEN, _player1_name);
+    strcpy_s(currentData.p2Name, MAX_NAME_LEN, _player2_name);
+
+    // Copy điểm số và lượt đi
+    currentData.p1Score = _player1_score;
+    currentData.p2Score = _player2_score;
+    currentData.moveCount = _moveCount;
+    // ---------------------------------------------------
+
+    // 3. Copy bàn cờ (Giữ nguyên)
     for (int i = 0; i < BOARD_SIZE; ++i) {
         for (int j = 0; j < BOARD_SIZE; ++j) {
             currentData.board[i][j] = _A[i][j].c;
         }
     }
+
+    // 4. Metadata (Giữ nguyên)
     time_t now = time(0); tm ltm; localtime_s(&ltm, &now);
     strftime(currentData.date, sizeof(currentData.date), "%d-%m-%Y %H:%M", &ltm);
     strcpy_s(currentData.type, sizeof(currentData.type), "2 Players");
+
     return currentData;
 }
 
@@ -434,14 +457,27 @@ GameStateData GetCurrentGameStateData() {
  * @brief Áp dụng dữ liệu từ file save vào game.
  */
 void ApplyLoadedData(const GameStateData& data) {
+    // 1. Bung bàn cờ (Giữ nguyên)
     for (int i = 0; i < BOARD_SIZE; ++i)
         for (int j = 0; j < BOARD_SIZE; ++j)
             _A[i][j].c = data.board[i][j];
 
+    // 2. Bung dữ liệu cơ bản
     _TURN = (data.currentPlayer == -1);
-
+    _currentPlayer = (_TURN ? 1 : 2); // Cập nhật biến _currentPlayer cho đồng bộ
     _X = data.cursorX;
     _Y = data.cursorY;
+
+    // --- 3. CHỖ NỐI DÂY QUAN TRỌNG (THÊM MỚI) ---
+    // Lấy tên từ file đè vào biến game
+    strcpy_s(_player1_name, MAX_NAME_LEN, data.p1Name);
+    strcpy_s(_player2_name, MAX_NAME_LEN, data.p2Name);
+
+    // Lấy điểm số
+    _player1_score = data.p1Score;
+    _player2_score = data.p2Score;
+    _moveCount = data.moveCount;
+    // -------------------------------------------
 }
 
 

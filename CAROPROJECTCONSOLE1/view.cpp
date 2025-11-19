@@ -12,6 +12,7 @@
 #include "GameState.h"
 #include <cwchar> // THÊM VÀO: Thư viện cần thiết cho hàm SetConsoleFont
 #include <sstream>
+#include "GameAssets.h"
 using namespace std;
 
 const char* MENU_ITEMS[] = { "NEW GAME", "LOAD GAME", "SETTING", "GUIDE", "ABOUT", "EXIT" };
@@ -223,6 +224,7 @@ void StartAbout() {
 void DrawBoard(int pSize) {
     // Vòng lặp này sẽ đi qua từng "giao điểm" trên lưới caro
     SetColorRGB(0, 0, 0);
+    SetBgRGB(89, 79, 175);
     for (int j = 0; j <= pSize; j++) {
         for (int i = 0; i <= pSize; i++) {
 
@@ -254,30 +256,38 @@ void DrawBoard(int pSize) {
             }
         }
     }
+
 }
 // Nó đọc Model (_Board[][]) và in ra tất cả X, O
 // Đặt hàm này trong file View.cpp hoặc file tương tự
 void RedrawBoardState() {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            // Lấy tọa độ màn hình từ chỉ số mảng
-            int screenX = LEFT + j * 4 + 2; // Tọa độ X để vẽ
-            int screenY = TOP + i * 2 + 1;  // Tọa độ Y để vẽ
+            if (_A[i][j].c != 0) { // Chỉ vẽ khi ô đó có quân cờ
 
-            GotoXY(screenX, screenY); // Di chuyển đến đúng ô
+                // Lấy tọa độ màn hình
+                int screenX = LEFT + j * 4 + 2;
+                int screenY = TOP + i * 2 + 1;
 
-            if (_A[i][j].c == -1) { // Nếu là quân X
-                SetColorRGB(255, 0, 0); // Màu đỏ
-                std::cout << "X";
+                GotoXY(screenX, screenY);
+
+                // --- BẮT BUỘC: SET LẠI MÀU NỀN TÍM TRƯỚC KHI VẼ ---
+                SetBgRGB(89, 79, 175);
+                // ---------------------------------------------------
+
+                if (_A[i][j].c == -1) { // X
+                    SetColorRGB(255, 0, 0);
+                    std::cout << "X";
+                }
+                else if (_A[i][j].c == 1) { // O
+                    SetColorRGB(0, 0, 255);
+                    std::cout << "O";
+                }
             }
-            else if (_A[i][j].c == 1) { // Nếu là quân O
-                SetColorRGB(0, 0, 255); // Màu xanh
-                std::cout << "O";
-            }
-            // Nếu là 0 (ô trống) thì không làm gì cả
         }
     }
-    // Sau khi vẽ xong, đặt lại màu mặc định
+    // Reset về mặc định sau khi vẽ xong
+    SetBgRGB(89, 79, 175);
     SetColorRGB(0, 0, 0);
 }
 // --- XỬ LÝ KẾT THÚC TRÒ CHƠI ---
@@ -606,6 +616,8 @@ void DrawStatic2P_UI() {
  */
 // hàm này sửa sau xài tạm ngôi sao
 void UpdateDynamic2P_UI() {
+    SetColorRGB(0, 0, 0);
+    SetBgRGB(89, 79, 175);
     const int p1_box_x = 10, p1_box_y = 5;
     const int p2_box_x = 130, p2_box_y = 5;
 
@@ -735,4 +747,20 @@ void DrawGameOverScreen(int selectedOption) {
     // Vẽ viền dưới
     GotoXY(BOX_X, BOX_Y + 9);
     std::cout << "└" << std::string(BOX_WIDTH - 2, '─') << "┘";
+}
+void DrawGameUI() {
+    ClearScreenWithColor(89, 79, 175);
+    
+    DrawBoard(BOARD_SIZE); // Ve man hinh game
+    // 2. Vẽ các thông tin TĨNH (Tên, khung, chữ WINS, MOVES...)
+    // Bắt buộc phải có, nếu không Resume xong chỉ thấy mỗi số điểm bay lơ lửng
+    SetColorRGB(0, 0, 0); // Chọn màu chữ (ví dụ đen)
+    DrawStatic2P_UI();
+
+    // 3. Vẽ các thông tin ĐỘNG hiện tại (Điểm số, lượt đi đang dở dang)
+    // Để khi Resume, nó hiện đúng điểm số cũ chứ không phải số 0
+    UpdateDynamic2P_UI();
+
+    // 4. Vẽ trang trí (nếu có dùng ảnh gạch, mario...)
+    DrawBrickp(0, 47);
 }

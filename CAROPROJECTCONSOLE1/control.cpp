@@ -17,6 +17,7 @@
 #include <ctime>    // <-- Thêm thư viện để khởi tạo seed ngẫu nhiên
 // random name
 #include <ctype.h>
+#include "GameAssets.h"
 extern const int TOTAL_ITEMS;
 extern const int TOTAL_PAUSE_ITEMS;
 
@@ -56,11 +57,7 @@ void StartGame() {
 	// --- ĐỒNG BỘ HÓA LƯỢT ĐI KHI BẮT ĐẦU ---
 	_currentPlayer = 1;     // Lượt của Player 1
 	_TURN = true;         // Tương ứng với lượt của X (true)
-
-	DrawBoard(BOARD_SIZE); // Ve man hinh game
-	DrawStatic2P_UI();
-	// Cập nhật giá trị động lần đầu tiên (tất cả đều là 0)
-	UpdateDynamic2P_UI();
+    DrawGameUI();
 
 	GotoXY(_X, _Y);
 	SetCursorVisible(true);
@@ -370,13 +367,15 @@ void Handle2PlayerGame() {
                 UpdateDynamic2P_UI();    // Vẽ điểm
 
                 GotoXY(_X, _Y);          // Về bàn cờ
+                SetBgRGB(89, 79, 175);
                 if (_currentPlayer == 1) {
                     SetColorRGB(255, 0, 0); printf("X");
                 }
                 else {
                     SetColorRGB(0, 0, 255); printf("O");
                 }
-
+                SetColorRGB(0, 0, 0);
+                SetBgRGB(89, 79, 175);
                 // Sau khi vẽ xong X/O, ta trả lại trạng thái SÁNG cho con trỏ
                 // Để chuẩn bị cho lượt sau
                 isCursorVisible = true;

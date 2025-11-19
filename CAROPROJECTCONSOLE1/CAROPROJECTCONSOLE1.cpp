@@ -107,6 +107,7 @@ int main() {
         }
                  // --- TRẠNG THÁI CHƠI GAME ---
         case PLAY_2P:{
+            
             Handle2PlayerGame();
             Sleep(15);
             break;
@@ -119,6 +120,9 @@ int main() {
 
             // Xử lý kết quả
             switch (choice) {
+            case 0:
+                ShowSaveGameScreen();
+                break;
             case 1: // Chọn "Play again"
                 StartGame();
                 currentState = PLAY_2P;
@@ -145,8 +149,8 @@ int main() {
 
             case 0: // Resume
                 // --- BẮT BUỘC SỬA LỖI Ở ĐÂY ---
-                ClearScreenWithColor(255, 255, 255);
-                SetColorRGB(0, 0, 0);
+                DrawGameUI();
+                
                 DrawBoard(BOARD_SIZE);        // 2. Vẽ lại khung bàn cờ (từ View.h)
                 RedrawBoardState(); // 3. Vẽ lại các quân X, O đã đánh (hàm mới ở trên)
                 // ---------------------------------
@@ -197,8 +201,7 @@ int main() {
                 // 2. Đặt lại màu vẽ (ví dụ: màu đen cho khung)
                 SetColorRGB(0, 0, 0);
 
-                // 3. Vẽ khung bàn cờ trống
-                DrawBoard(BOARD_SIZE);
+                DrawGameUI();
 
                 // 4. Vẽ lại các quân cờ dựa trên mảng _A đã được cập nhật
                 RedrawBoardState();

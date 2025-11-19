@@ -15,15 +15,25 @@ extern char _player1_name[MAX_NAME_LEN];
 extern char _player2_name[MAX_NAME_LEN];
 
 struct GameStateData {
-	int board[BOARD_SIZE][BOARD_SIZE]; // Trạng thái bàn cờ (_A)
-	int currentPlayer;                 // Lượt của người chơi hiện tại (_TURN)
-	int cursorX;                       // Vị trí con trỏ X (_X)
-	int cursorY;                       // Vị trí con trỏ Y (_Y)
-	bool loadSuccess;
-	// Thêm bất kỳ thông tin nào khác bạn muốn lưu, ví dụ: điểm số, thời gian...
-	char name[MAX_NAME_LEN];    // NAME -> Tên file save
-	char date[MAX_DATE_LEN];    // DATE -> "DD-MM-2025 14:12"
-	char type[MAX_TYPE_LEN];    // TYPE -> "1 Player" / "2 Players"
+    // --- Dữ liệu cũ (GIỮ NGUYÊN) ---
+    int board[BOARD_SIZE][BOARD_SIZE];
+    int currentPlayer;
+    int cursorX;
+    int cursorY;
+    bool loadSuccess;
+
+    // --- THÊM MỚI (PHẦN BẠN ĐANG THIẾU) ---
+    char p1Name[MAX_NAME_LEN]; // Tên người chơi 1
+    char p2Name[MAX_NAME_LEN]; // Tên người chơi 2
+    int p1Score;               // Điểm P1
+    int p2Score;               // Điểm P2
+    int moveCount;             // Số lượt đi
+    // ---------------------------------------
+
+    // --- Metadata cũ (GIỮ NGUYÊN) ---
+    char name[MAX_NAME_LEN];
+    char date[MAX_DATE_LEN];
+    char type[MAX_TYPE_LEN];
 };
 // dung cho chi so trong game PLAY_2P
 extern int _player1_score; // Dùng cho WINS
