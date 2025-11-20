@@ -129,7 +129,6 @@
     <ClCompile Include="control.cpp" />
     <ClCompile Include="HandleInput.cpp" />
     <ClCompile Include="model.cpp" />
-    <ClCompile Include="newgame.cpp" />
     <ClCompile Include="SaveLoad.cpp" />
     <ClCompile Include="SaveLoadUI.cpp" />
     <ClCompile Include="view.cpp" />

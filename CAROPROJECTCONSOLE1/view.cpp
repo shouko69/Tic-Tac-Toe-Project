@@ -7,7 +7,6 @@
 #include <iomanip>    
 #include <string>
 #include "truecolor_utils.h"
-#include "newgame.h"
 // #include <fcntl.h> // Không cần nữa
 // #include <io.h> // Không cần nữa
 #include "GameState.h"

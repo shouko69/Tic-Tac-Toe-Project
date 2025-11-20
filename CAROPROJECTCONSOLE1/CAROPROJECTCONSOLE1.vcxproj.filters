@@ -36,9 +36,6 @@
     <ClCompile Include="SaveLoadUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="newgame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="view.h">
