@@ -1,4 +1,4 @@
-#include "GameAssets.h"
+﻿#include "GameAssets.h"
 #include "View.h"
 #include <vector>
 
@@ -1270,4 +1270,55 @@ static const std::vector<DrawInstructionTrueColor> DrawBrickp_Data = {
 };
 void DrawBrickp(int x, int y) {
     DrawImageHalfBlock(x, y, DrawBrickp_Data);
+}
+
+
+// --- Asset: DrawOmini (3x4) ---
+static const std::vector<DrawInstructionTrueColor> DrawOmini_Data = {
+    {0, 0, 89, 79, 175, 1},
+    {0, 1, 255, 0, 253, 1},
+    {0, 2, 89, 79, 175, 1},
+    {1, 0, 255, 0, 253, 1},
+    {1, 1, 89, 79, 175, 1},
+    {1, 2, 255, 0, 253, 1},
+    {2, 0, 255, 0, 253, 1},
+    {2, 1, 89, 79, 175, 1},
+    {2, 2, 255, 0, 253, 1},
+    {3, 0, 89, 79, 175, 1},
+    {3, 1, 255, 0, 253, 1},
+    {3, 2, 89, 79, 175, 1}
+};
+void DrawOmini(int x, int y) {
+    int cellX = LEFT + x * CELL_VISUAL_WIDTH;
+    int cellY = TOP + y * CELL_VISUAL_HEIGHT;
+
+    // CĂN GIỮA:
+    // X: Cộng thêm 2 (Ô rộng 6, hình rộng 3 -> Dư 3 -> Chia đôi lấy lệch phải chút cho đẹp)
+    // Y: Cộng thêm 1 (Ô cao 3 dòng, hình cao 2 dòng -> Dư 1 dòng -> Dịch xuống 1 dòng)
+    DrawImageHalfBlock(cellX + 2, cellY + 1, DrawOmini_Data);
+}
+
+
+// --- Asset: DrawXmini (3x4) ---
+static const std::vector<DrawInstructionTrueColor> DrawXmini_Data = {
+    {0, 0, 255, 0, 0, 1},
+    {0, 1, 89, 79, 175, 1},
+    {0, 2, 255, 0, 0, 1},
+    {1, 0, 89, 79, 175, 1},
+    {1, 1, 255, 0, 0, 1},
+    {1, 2, 89, 79, 175, 1},
+    {2, 0, 89, 79, 175, 1},
+    {2, 1, 255, 0, 0, 1},
+    {2, 2, 89, 79, 175, 1},
+    {3, 0, 255, 0, 0, 1},
+    {3, 1, 89, 79, 175, 1},
+    {3, 2, 255, 0, 0, 1}
+};
+void DrawXmini(int x, int y) {
+    int cellX = LEFT + x * CELL_VISUAL_WIDTH;
+    int cellY = TOP + y * CELL_VISUAL_HEIGHT;
+
+    // Tương tự như O
+    DrawImageHalfBlock(cellX + 2, cellY + 1, DrawXmini_Data);
+
 }

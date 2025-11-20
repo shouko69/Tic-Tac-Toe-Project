@@ -57,9 +57,12 @@ void StartGame() {
 	// --- ĐỒNG BỘ HÓA LƯỢT ĐI KHI BẮT ĐẦU ---
 	_currentPlayer = 1;     // Lượt của Player 1
 	_TURN = true;         // Tương ứng với lượt của X (true)
+    //Đưa toạ độ về 0 (Góc trái trên bàn cờ)
+    _X = 0;
+    _Y = 0;
     DrawGameUI();
 
-	GotoXY(_X, _Y);
+    GotoBoard(_X, _Y);
 	SetCursorVisible(true);
 }
 
@@ -74,21 +77,35 @@ void ExitGame() {
 }
 
 void MoveRight() {
-    int right_boundary = LEFT + (BOARD_SIZE - 1) * 4;
-    if (_X < right_boundary) _X += 4;
+    // Chỉ cho phép tăng nếu chưa chạm lề phải (BOARD_SIZE - 1)
+    if (_X < BOARD_SIZE - 1) {
+        _X++; // Tăng chỉ số cột lên 1 (ví dụ từ ô 0 sang ô 1)
+        GotoBoard(_X, _Y); // Hàm này sẽ tự đưa con trỏ đến giữa ô mới
+    }
 }
 
 void MoveLeft() {
-    if (_X > LEFT + 2) _X -= 4;
+    // Chỉ cho phép giảm nếu lớn hơn 0
+    if (_X > 0) {
+        _X--; 
+        GotoBoard(_X, _Y);
+    }
 }
 
 void MoveDown() {
-    int bottom_boundary = TOP + (BOARD_SIZE - 1) * 2;
-    if (_Y < bottom_boundary) _Y += 2;
+    // Chỉ cho phép xuống nếu chưa chạm đáy
+    if (_Y < BOARD_SIZE - 1) {
+        _Y++;
+        GotoBoard(_X, _Y);
+    }
 }
 
 void MoveUp() {
-    if (_Y > TOP + 1) _Y -= 2;
+    // Chỉ cho phép lên nếu lớn hơn 0
+    if (_Y > 0) {
+        _Y--;
+        GotoBoard(_X, _Y);
+    }
 }
 
 // Ẩn/hiện con trỏ
@@ -279,124 +296,93 @@ bool HandlePlayerNameInput() {
 
 
 void Handle2PlayerGame() {
-    // --- 1. LOGIC CHỚP TẮT THEO THỜI GIAN THỰC ---
-    // Sử dụng biến static để lưu thời gian, không bị mất đi khi hàm chạy xong
-    static DWORD lastBlinkTime = GetTickCount(); // Lấy thời gian hiện tại của hệ thống
-    static bool isCursorVisible = true;
+    // 1. Đưa con trỏ về vị trí hiện tại
+    GotoBoard(_X, _Y);
 
-    DWORD currentTime = GetTickCount();
-    const int BLINK_INTERVAL = 500; // Tốc độ chớp: 500ms (0.5 giây) - Bạn chỉnh số này nếu muốn nhanh/chậm
+    // 2. Chờ phím bấm
+    int key = _getch();
 
-    // Tính toán: Nếu đã trôi qua 500ms thì đảo trạng thái
-    if (currentTime - lastBlinkTime >= BLINK_INTERVAL) {
-        isCursorVisible = !isCursorVisible; // Đảo ngược (Sáng -> Tối hoặc Tối -> Sáng)
-        lastBlinkTime = currentTime;        // Cập nhật lại mốc thời gian
+    // Xử lý mã phím mũi tên (0 hoặc 224)
+    if (key == 0 || key == 224) {
+        key = _getch();
+        // Mã mũi tên: 72(Lên), 80(Xuống), 75(Trái), 77(Phải)
+    }
+    else {
+        key = toupper(key); // Chuyển w -> W, f -> F
+    }
 
-        // Áp dụng trạng thái mới
-        if (isCursorVisible) {
-            GotoXY(_X, _Y);         // Đảm bảo về đúng chỗ trước khi hiện
-            SetCursorVisible(true);
-        }
-        else {
-            SetCursorVisible(false);
+    if (key == 27) { // ESC
+        currentState = PAUSE;
+        return;
+    }
+
+    // --- LOGIC PHÂN QUYỀN (SỬA LẠI NGHIÊM NGẶT) ---
+    bool validAction = false; // Cờ đánh dấu có hành động hợp lệ hay không
+
+    // === NẾU LÀ LƯỢT PLAYER 1 (X) ===
+    if (_currentPlayer == 1) {
+        // CHỈ CHO PHÉP CÁC PHÍM NÀY:
+        if (key == 'W') { MoveUp(); }
+        else if (key == 'S') { MoveDown(); }
+        else if (key == 'A') { MoveLeft(); }
+        else if (key == 'D') { MoveRight(); }
+
+        // Nút đánh của P1: Chỉ phím F hoặc SPACE (32).
+        // TUYỆT ĐỐI KHÔNG CÓ KEY 13 (ENTER) Ở ĐÂY
+        else if (key == 'F' || key == 32) {
+            validAction = true;
         }
     }
 
-    // Đảm bảo nếu đang ở trạng thái Sáng thì con trỏ phải nằm đúng chỗ
-    // (Tránh trường hợp con trỏ bị trôi đi đâu đó)
-    if (isCursorVisible) {
-        GotoXY(_X, _Y);
+    // === NẾU LÀ LƯỢT PLAYER 2 (O) ===
+    else if (_currentPlayer == 2) {
+        // CHỈ CHO PHÉP CÁC PHÍM NÀY:
+        if (key == 72) { MoveUp(); }        // Mũi tên Lên
+        else if (key == 80) { MoveDown(); } // Mũi tên Xuống
+        else if (key == 75) { MoveLeft(); } // Mũi tên Trái
+        else if (key == 77) { MoveRight(); } // Mũi tên Phải
+
+        // Nút đánh của P2: Chỉ phím ENTER (13) hoặc Numpad Enter.
+        else if (key == 13) {
+            validAction = true;
+        }
     }
 
-    // --- 2. XỬ LÝ INPUT ---
-    if (_kbhit()) {
-        int key = _getch();
+    // --- XỬ LÝ ĐÁNH CỜ ---
+    if (validAction) {
+        // Kiểm tra ô trống
+        if (CheckBoard(_X, _Y) != 0) {
+            _moveCount++;
 
-        // === KỸ THUẬT "RESET NHỊP TIM" ===
-        // Khi người chơi bấm phím, lập tức cho SÁNG NGAY và RESET đồng hồ.
-        // Để người chơi thấy phản hồi tức thì, không bị cảm giác "khựng".
-        isCursorVisible = true;
-        lastBlinkTime = currentTime;
-        SetCursorVisible(true);
-        GotoXY(_X, _Y);
-        // =================================
+            // --- SỬA ĐỔI TẠI ĐÂY ---
+            // Thay vì GotoBoard rồi cout thủ công, ta gọi hàm vẽ xịn xò của bạn.
 
-        if (key == 27) { // ESC
-            currentState = PAUSE;
-            return;
-        }
-
-        bool actionKeyPressed = false;
-
-        // --- PLAYER 1 ---
-        if (_currentPlayer == 1) {
-            int upperKey = toupper(key);
-            if (upperKey == 'W') MoveUp();
-            else if (upperKey == 'A') MoveLeft();
-            else if (upperKey == 'S') MoveDown();
-            else if (upperKey == 'D') MoveRight();
-            else if (upperKey == 'F') actionKeyPressed = true;
-        }
-        // --- PLAYER 2 ---
-        else {
-            if (key == 224 || key == 0) {
-                int arrowKey = _getch();
-                if (arrowKey == 72) MoveUp();
-                else if (arrowKey == 80) MoveDown();
-                else if (arrowKey == 75) MoveLeft();
-                else if (arrowKey == 77) MoveRight();
+            if (_currentPlayer == 1) {
+                DrawXmini(_X, _Y); // Gọi hàm vẽ X (nhớ truyền toạ độ logic 0,1,2...)
             }
-            else if (key == 13) actionKeyPressed = true;
-        }
+            else {
+                DrawOmini(_X, _Y); // Gọi hàm vẽ O
+            }
 
-        // Sau khi di chuyển, cập nhật lại vị trí con trỏ vật lý ngay
-        GotoXY(_X, _Y);
+            // Lưu ý: Hàm DrawX/DrawO của bạn nên tự xử lý việc:
+            // 1. GotoBoard(_X, _Y) hoặc tính toán toạ độ màn hình.
+            // 2. SetBgRGB(...) để không bị lỗi nền đen.
+            // -----------------------
 
-        // --- XỬ LÝ ĐÁNH CỜ ---
-        if (actionKeyPressed) {
-            int pY_idx = (_Y - TOP) / CELL_VISUAL_HEIGHT;
-            int pX_idx = (_X - LEFT) / CELL_VISUAL_WIDTH;
+            // Kiểm tra thắng thua (Giữ nguyên)
+            int status = TestBoard();
+            if (status != 2) {
+                if (status == -1) { _gameWinner = 1; _player1_score++; }
+                else if (status == 1) { _gameWinner = 2; _player2_score++; }
+                else { _gameWinner = 0; }
 
-            _TURN = (_currentPlayer == 1);
-
-            if (CheckBoard(pX_idx, pY_idx) != 0) {
-                _moveCount++;
-
-                // --- CẬP NHẬT UI & BÀN CỜ (Chiến thuật Ninja) ---
-                SetCursorVisible(false); // Tàng hình
-                UpdateDynamic2P_UI();    // Vẽ điểm
-
-                GotoXY(_X, _Y);          // Về bàn cờ
-                SetBgRGB(89, 79, 175);
-                if (_currentPlayer == 1) {
-                    SetColorRGB(255, 0, 0); printf("X");
-                }
-                else {
-                    SetColorRGB(0, 0, 255); printf("O");
-                }
-                SetColorRGB(0, 0, 0);
-                SetBgRGB(89, 79, 175);
-                // Sau khi vẽ xong X/O, ta trả lại trạng thái SÁNG cho con trỏ
-                // Để chuẩn bị cho lượt sau
-                isCursorVisible = true;
-                lastBlinkTime = GetTickCount(); // Reset đồng hồ
-                GotoXY(_X, _Y);
-                SetCursorVisible(true);
-                // ------------------------------------------------
-
-                int status = TestBoard();
-                if (status != 2) {
-                    if (status == -1) _gameWinner = 1;
-                    else if (status == 1) _gameWinner = 2;
-                    else _gameWinner = 0;
-
-                    if (_gameWinner == 1) _player1_score++;
-                    else if (_gameWinner == 2) _player2_score++;
-
-                    currentState = GAME_OVER;
-                    return;
-                }
+                currentState = GAME_OVER;
+            }
+            else {
+                // Đổi lượt
                 _currentPlayer = (_currentPlayer == 1) ? 2 : 1;
+                _TURN = !_TURN;
+                UpdateDynamic2P_UI();
             }
         }
     }
@@ -404,28 +390,36 @@ void Handle2PlayerGame() {
    
 // --- HÀM MÀN HÌNH KẾT QUẢ ---
 int HandleGameOverScreen() {
-    int selectedOption = 1;
-    DrawGameOverScreen(selectedOption);
-    int old_selected = selectedOption;
+    int selectedOption = 1; // Mặc định chọn Play Again (giữa)
+
+    // LẦN ĐẦU TIÊN: Vẽ TOÀN BỘ màn hình (Nền, Chữ Win, Stats, Nút)
+    // Bạn cần sửa hàm DrawGameOverScreen thêm tham số bool drawAll
+    DrawGameOverScreen(selectedOption, true);
+
     while (true) {
         int key = _getch();
-        old_selected = selectedOption;
-        if (key == 9) { // TAB
+
+        // Chuẩn hóa phím về chữ hoa để a hay A đều ăn
+        int upperKey = toupper(key);
+
+        int old_selected = selectedOption;
+
+        // --- XỬ LÝ PHÍM TAB (Mã ASCII = 9) ---
+        if (key == 9) {
+            // Cộng 1 để qua phải, chia lấy dư cho 3 để quay vòng (0 -> 1 -> 2 -> 0)
             selectedOption = (selectedOption + 1) % 3;
         }
-        else if (key == 224) { // Mũi tên
-            key = _getch();
-            if (key == 75) selectedOption = (selectedOption - 1 + 3) % 3;
-            else if (key == 77) selectedOption = (selectedOption + 1) % 3;
-        }
-        else if (key == 13) { // Enter
-            if (selectedOption != 0) return selectedOption;
+        else if (key == 13 || key == 32) { // Enter hoặc Space
+            return selectedOption;
         }
         else if (key == 27) { // ESC
             return 2; // Coi như chọn Back
         }
+
+        // --- CHỈ VẼ LẠI KHI CÓ SỰ THAY ĐỔI ---
         if (selectedOption != old_selected) {
-            DrawGameOverScreen(selectedOption);
+            // QUAN TRỌNG: Tham số false nghĩa là "Chỉ vẽ lại nút bấm, đừng xóa màn hình"
+            DrawGameOverScreen(selectedOption, false);
         }
     }
 }

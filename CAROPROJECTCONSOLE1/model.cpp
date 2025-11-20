@@ -14,15 +14,19 @@ int _currentPlayer;
 int _gameWinner;
 
 void ResetData() {
-	for (int i = 0; i < BOARD_SIZE; i++) {
-		for (int j = 0; j < BOARD_SIZE; j++) {
-			_A[i][j].x = 4 * j + LEFT + 2; 
-			_A[i][j].y = 2*i + TOP + 1; 
-			_A[i][j].c = 0; 
-		}
-	}
-	_TURN = true; _COMMAND = -1; // Gán lượt và phím mặc định
-	_X = _A[0][0].x; _Y = _A[0][0].y; // Thiết lập lại tọa độ hiện hành ban đầu
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            _A[i][j].x = 0; // Không cần dùng tới nữa
+            _A[i][j].y = 0; // Không cần dùng tới nữa
+            _A[i][j].c = 0; // 0: Chưa đánh
+        }
+    }
+    _TURN = true;
+    _COMMAND = -1;
+
+    // --- QUAN TRỌNG NHẤT: Đặt về 0 để bắt đầu ở góc bàn cờ ---
+    _X = 0;
+    _Y = 0;
 }
 
 void GabageCollect() {

@@ -7,8 +7,8 @@
 #define CONSOLE_WIDTH 165
 #define CONSOLE_HEIGHT 55
 // --- BƯỚC 2: KÍCH THƯỚC VẼ CỦA 1 Ô ---
-#define CELL_VISUAL_WIDTH 4
-#define CELL_VISUAL_HEIGHT 2
+#define CELL_VISUAL_WIDTH 6
+#define CELL_VISUAL_HEIGHT 3
 
 // --- BƯỚC 3: TỰ ĐỘNG TÍNH TOÁN KÍCH THƯỚC THỰC TẾ (VISUAL) ---
 #define BOARD_VISUAL_WIDTH (BOARD_SIZE * CELL_VISUAL_WIDTH + 1)
@@ -46,7 +46,7 @@ void CenterConsole();
 // *****HAMKHAIBAO*****
 extern int CenterX(const std::string& text);
 extern void GotoXY(int x, int y);
-
+void GotoBoard(int pX, int pY);
 void DrawBoard(int pSize);
 void RedrawBoardState();
 int ProcessFinish(int pWhoWin);
@@ -79,8 +79,8 @@ void UpdatePlayerNameScreen(int activeControl, const char* p1_buffer, const char
 
 
 // hien thi result
-void DrawGameOverScreen(int selectedOption);
-
+void DrawLineInBox(int boxX, int y, int boxWidth, std::string label, std::string value, int colorContent);
+void DrawGameOverScreen(int selectedOption, bool drawAll);
 void DrawStatic2P_UI();
 void UpdateDynamic2P_UI();
 void DrawGameUI();

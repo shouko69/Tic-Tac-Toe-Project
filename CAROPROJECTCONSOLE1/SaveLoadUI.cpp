@@ -120,13 +120,10 @@ bool ShowLoadGameScreen() {
                     bg_r = 48; bg_g = 25; bg_b = 52;
                 }
 
-                // SỬA ĐỔI: Áp dụng màu nền đã xác định cho TẤT CẢ các ô trong hàng
-                // Tạo chuỗi hiển thị tên 2 người đấu với nhau
-                char displayNames[50];
-                sprintf_s(displayNames, "%s vs %s", saves[actualIndex].p1Name, saves[actualIndex].p2Name);
+               
 
                 // Vẽ chuỗi đó ra cột NAME
-                DrawCenteredCell(displayNames, nameX, rowY, COL_WIDTH_NAME, 255, 255, 255, bg_r, bg_g, bg_b);
+                DrawCenteredCell(saves[actualIndex].name, nameX, rowY, COL_WIDTH_NAME, 255, 255, 255, bg_r, bg_g, bg_b);
                 DrawCenteredCell(saves[actualIndex].date, dateX, rowY, COL_WIDTH_DATE, 255, 255, 255, bg_r, bg_g, bg_b);
                 DrawCenteredCell(saves[actualIndex].type, typeX, rowY, COL_WIDTH_TYPE, 255, 255, 255, bg_r, bg_g, bg_b);
 

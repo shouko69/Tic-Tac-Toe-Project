@@ -11,6 +11,8 @@ struct _POINT { int x, y, c; }; // x: toa do dong`, y: toa do cot, c: danh dau
 extern _POINT _A[BOARD_SIZE][BOARD_SIZE]; //Ma tran ban co
 extern bool _TURN; //true la luot nguoi thu nhat, false la luot nguoi thu hai
 // Khai báo các biến để lưu tên hai người chơi.
+extern int _X; // Tọa độ dòng hiện tại của con trỏ
+extern int _Y; // Tọa độ cột hiện tại của con trỏ
 extern char _player1_name[MAX_NAME_LEN];
 extern char _player2_name[MAX_NAME_LEN];
 

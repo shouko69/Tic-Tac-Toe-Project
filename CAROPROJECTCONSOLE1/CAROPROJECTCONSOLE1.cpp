@@ -109,6 +109,7 @@ int main() {
         case PLAY_2P:{
             
             Handle2PlayerGame();
+            GotoBoard(_X, _Y);
             Sleep(15);
             break;
         }
@@ -185,41 +186,68 @@ int main() {
                   // --- SETTINGS / LOAD / GUIDE / ABOUT ---
         case SETTINGS:
         case LOAD: {
+            // Reset dữ liệu tạm trước khi load
             ResetData();
-            // ShowLoadGameScreen sẽ tự lo việc xóa menu chính, vẽ màn hình load,
-            // và gọi ApplyLoadedData nếu người dùng chọn một file.
-            // Nó chỉ trả về true (thành công) hoặc false (hủy bỏ).
+
             bool loadSuccess = ShowLoadGameScreen();
 
             if (loadSuccess) {
-                // Dữ liệu ĐÃ được áp dụng bên trong ShowLoadGameScreen.
-                // Bây giờ chúng ta chỉ cần vẽ lại trạng thái game mới.
-
-                // 1. Xóa màn hình Load để chuẩn bị vẽ bàn cờ
-                ClearScreenWithColor(255, 255, 255); // Dùng màu nền của bàn cờ
-
-                // 2. Đặt lại màu vẽ (ví dụ: màu đen cho khung)
+                // --- BƯỚC 1: VẼ LẠI UI CƠ BẢN ---
+                ClearScreenWithColor(89, 79, 175);
                 SetColorRGB(0, 0, 0);
-
                 DrawGameUI();
 
-                // 4. Vẽ lại các quân cờ dựa trên mảng _A đã được cập nhật
-                RedrawBoardState();
+                // --- BƯỚC 2: KIỂM TRA XEM FILE SAVE NÀY ĐÃ KẾT THÚC CHƯA ---
+                // Gọi hàm kiểm tra thắng thua ngay lập tức trên dữ liệu vừa load
+                int status = TestBoard();
 
-                // 5. Di chuyển con trỏ vật lý đến vị trí (_X, _Y) đã được load
-                GotoXY(_X, _Y);
+                if (status != 2) {
+                    // => ĐÂY LÀ FILE SAVE ĐÃ KẾT THÚC (CÓ NGƯỜI THẮNG)
 
-                // 6. Chuyển trạng thái game sang đang chơi
+                    // 1. Dọn sạch bàn cờ
+                    for (int i = 0; i < BOARD_SIZE; i++) {
+                        for (int j = 0; j < BOARD_SIZE; j++) {
+                            _A[i][j].c = 0;
+                        }
+                    }
+
+                    // --- SỬA LỖI TẠI ĐÂY (RESET BIẾN) ---
+                    _moveCount = 0;      // Reset số nước đi về 0
+                    _currentPlayer = 1;  // Luôn bắt đầu lại là Player 1
+                    _TURN = true;        // Luôn là lượt của X
+                    _X = 0; _Y = 0;      // Con trỏ về góc
+
+                    // --- QUAN TRỌNG: VẼ LẠI SỐ MOVES LÊN MÀN HÌNH ---
+                    // Nếu không gọi hàm này, biến đã về 0 nhưng màn hình vẫn hiện số cũ (7)
+                    UpdateDynamic2P_UI();
+                    // -------------------------------------------------
+
+                    // 4. Vẽ lại bàn cờ (Lúc này trắng tinh)
+                    RedrawBoardState();
+
+                    // 5. Thông báo (Tùy chọn)
+                    GotoXY(LEFT, TOP - 2);
+                    SetColorRGB(255, 255, 0); // Màu vàng cho nổi
+                    std::cout << "Loaded finished game. Starting new round...";
+                    SetColorRGB(0, 0, 0);
+                }
+                else {
+                    // Game chưa kết thúc -> Vẽ lại các quân cờ cũ để chơi tiếp
+                    RedrawBoardState();
+                }
+
+                // --- BƯỚC 3: ĐƯA CON TRỎ VỀ ĐÚNG CHỖ ---
+                GotoBoard(_X, _Y);
+
+                // --- BƯỚC 4: VÀO GAME ---
                 currentState = PLAY_2P;
-
-                // 7. Hiển thị lại con trỏ
                 SetCursorVisible(true);
             }
-            
             else {
+                // Nếu load thất bại hoặc bấm Back
                 currentState = MENU;
             }
-            break; // Kết thúc case LOAD
+            break;
         }
         case GUIDE:
         case ABOUT:

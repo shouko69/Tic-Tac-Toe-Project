@@ -83,7 +83,6 @@ void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructio
     buffer += "\x1b[0m";
     std::cout << buffer << std::flush;
 }
-
 bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hConsole == INVALID_HANDLE_VALUE) return false;
@@ -96,8 +95,6 @@ bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY) {
     if (!SetCurrentConsoleFontEx(hConsole, FALSE, &cfi)) return false;
     return true;
 }
-
-
 void ResizeConsoleWindow(int width, int height) {
     HWND consoleWindow = GetConsoleWindow();
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -144,14 +141,33 @@ void FixConsoleWindow() {
     style &= ~(WS_MAXIMIZEBOX) & ~(WS_THICKFRAME);
     SetWindowLong(consoleWindow, GWL_STYLE, style);
 }
-
 void GotoXY(int x, int y) {
     COORD coord = { (SHORT)x, (SHORT)y };
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
+// Hàm này chuyên dùng để nhảy đến TÂM của một ô trên bàn cờ
+void GotoBoard(int pX, int pY) {
+    // --- CÔNG THỨC CĂN GIỮA TỰ ĐỘNG ---
 
+    // 1. Tính toạ độ góc trái trên của ô
+    int startX = LEFT + pX * CELL_VISUAL_WIDTH;
+    int startY = TOP + pY * CELL_VISUAL_HEIGHT;
 
+    // 2. Cộng thêm một nửa kích thước để vào tâm
+    // (CELL_VISUAL_WIDTH / 2) : Vào giữa chiều ngang
+    // (CELL_VISUAL_HEIGHT / 2) : Vào giữa chiều dọc
 
+    // Lưu ý: Nếu chiều rộng là số chẵn (ví dụ 6), tâm sẽ lệch phải 1 chút.
+    // Ta trừ nhẹ đi 1 (nếu muốn) hoặc để nguyên công thức toán học thuần túy:
+
+    int screenX = startX + (CELL_VISUAL_WIDTH / 2);
+    // Nếu thấy nó lệch phải 1 nấc thì dùng dòng dưới:
+    // int screenX = startX + (CELL_VISUAL_WIDTH / 2) - 1;
+
+    int screenY = startY + (CELL_VISUAL_HEIGHT / 2);
+
+    GotoXY(screenX, screenY);
+}
 int CenterX(const std::string& text) {
     // Sử dụng hằng số CONSOLE_WIDTH thay vì gọi hàm GetConsoleWidth()
     int x = (CONSOLE_WIDTH - (int)text.length()) / 2;
@@ -217,23 +233,24 @@ void StartAbout() {
     ResetColor();
     // SceneHandle("MAIN MENU"); // nếu huynh có hàm menu chính
     currentState = MENU;
-}
+}// can fix
 
 
 // --- VẼ BÀN CỜ ---
 void DrawBoard(int pSize) {
-    // Vòng lặp này sẽ đi qua từng "giao điểm" trên lưới caro
+
     SetColorRGB(0, 0, 0);
     SetBgRGB(89, 79, 175);
+
     for (int j = 0; j <= pSize; j++) {
         for (int i = 0; i <= pSize; i++) {
 
-            // Tính toán tọa độ chính xác của từng giao điểm trên màn hình
-            int x = LEFT + 4 * i;
-            int y = TOP + 2 * j;
+            // 1. Dùng biến toàn cục từ view.h để tính tọa độ
+            int x = LEFT + CELL_VISUAL_WIDTH * i;   // Thay CELL_WIDTH bằng CELL_VISUAL_WIDTH
+            int y = TOP + CELL_VISUAL_HEIGHT * j;   // Thay CELL_HEIGHT bằng CELL_VISUAL_HEIGHT
             GotoXY(x, y);
 
-            // --- Xác định vị trí để vẽ ký tự phù hợp (ĐÃ THAY THẾ) ---
+            // 2. Vẽ các giao điểm (Giữ nguyên logic)
             if (i == 0 && j == 0) std::cout << "╔";
             else if (i == pSize && j == 0) std::cout << "╗";
             else if (i == 0 && j == pSize) std::cout << "╚";
@@ -244,51 +261,40 @@ void DrawBoard(int pSize) {
             else if (i == pSize) std::cout << "╣";
             else std::cout << "╬";
 
-            // 2. Nếu đây không phải cột cuối cùng, vẽ 3 đường gạch ngang "---"
+            // 3. Vẽ đường ngang (Dùng vòng lặp để tự động thích nghi độ dài)
             if (i < pSize) {
-                std::cout << "═══"; // Thay vì 3 lần FRAME_HORIZONTAL
+                // Chạy vòng lặp dựa trên độ rộng đã cài trong view.h
+                // Trừ 1 là trừ đi cái ký tự giao điểm vừa vẽ ở trên
+                for (int k = 0; k < CELL_VISUAL_WIDTH - 1; k++) std::cout << "═";
             }
 
-            // 3. Nếu đây không phải hàng cuối cùng, vẽ 1 đường dọc "|" ở dưới
+            // 4. Vẽ đường dọc (Dùng vòng lặp để tự động thích nghi độ cao)
             if (j < pSize) {
-                GotoXY(x, y + 1);
-                std::cout << "║";
+                // Chạy vòng lặp dựa trên độ cao đã cài trong view.h
+                for (int k = 1; k < CELL_VISUAL_HEIGHT; k++) {
+                    GotoXY(x, y + k);
+                    std::cout << "║";
+                }
             }
         }
     }
-
 }
 // Nó đọc Model (_Board[][]) và in ra tất cả X, O
 // Đặt hàm này trong file View.cpp hoặc file tương tự
 void RedrawBoardState() {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
-            if (_A[i][j].c != 0) { // Chỉ vẽ khi ô đó có quân cờ
-
-                // Lấy tọa độ màn hình
-                int screenX = LEFT + j * 4 + 2;
-                int screenY = TOP + i * 2 + 1;
-
-                GotoXY(screenX, screenY);
-
-                // --- BẮT BUỘC: SET LẠI MÀU NỀN TÍM TRƯỚC KHI VẼ ---
-                SetBgRGB(89, 79, 175);
-                // ---------------------------------------------------
-
-                if (_A[i][j].c == -1) { // X
-                    SetColorRGB(255, 0, 0);
-                    std::cout << "X";
+            if (_A[i][j].c != 0) {
+                // Gọi hàm vẽ Pixel Art thay vì cout
+                if (_A[i][j].c == -1) {
+                    DrawXmini(j, i);
                 }
-                else if (_A[i][j].c == 1) { // O
-                    SetColorRGB(0, 0, 255);
-                    std::cout << "O";
+                else {
+                    DrawOmini(j, i);
                 }
             }
         }
     }
-    // Reset về mặc định sau khi vẽ xong
-    SetBgRGB(89, 79, 175);
-    SetColorRGB(0, 0, 0);
 }
 // --- XỬ LÝ KẾT THÚC TRÒ CHƠI ---
 int ProcessFinish(int pWhoWin) {
@@ -641,112 +647,245 @@ void UpdateDynamic2P_UI() {
     }
 }
 
-// ĐẶT KHỐI CODE NÀY Ở ĐẦU FILE View.cpp HOẶC NGAY TRÊN HÀM DrawGameOverScreen
-// 2 cai vẽ này tạm thời
-const char* WIN_ART[] = {
-    "__      __ .__   __. .__       __.",
-    "|  | /\\ |  ||  \\ |  | |  |     |  |",
-    "|  |/  \\|  ||   \\|  | |  |     |  |",
-    "|  '    '  ||  . `  | |  |     |  |",
-    "|   /    \\ ||  |\\   | |  `----.|  |",
-    "|__/      \\||__| \\__| |_______||__|"
+
+
+// ==================================================================================
+// PHẦN 1: ĐỊNH NGHĨA TÀI NGUYÊN (CHUYỂN HẾT VỀ VECTOR CHO ĐỒNG BỘ)
+// ==================================================================================
+// Chiều cao chung (Dùng cho vòng lặp vẽ)
+const int ART_HEIGHT = 6;
+// 1. WIN ART (Đã chuyển sang vector)
+const std::vector<std::string> WIN_ART = {
+    "██╗    ██╗██╗███╗   ██╗",
+    "██║    ██║██║████╗  ██║",
+    "██║ █╗ ██║██║██╔██╗ ██║",
+    "██║███╗██║██║██║╚██╗██║",
+    "╚███╔███╔╝██║██║ ╚████║",
+    " ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝"
 };
-const int WIN_ART_HEIGHT = 6; // Chiều cao của chữ WIN
-
-const char* LOSE_ART[] = {
-    ".______       .____    .___________. _______.",
-    "|   _  \\      |    |   |           ||   ____|",
-    "|  |_)  |     |    |   `---|  |----`|  |__   ",
-    "|      /      |    |       |  |     |   __|  ",
-    "|  |\\  \\----. |    |       |  |     |  |____ ",
-    "| _| `._____||____|       |__|     |_______|"
+// 2. LOSE ART (Đã chuyển sang vector)
+const std::vector<std::string> LOSE_ART = {
+    "██╗       ██████╗ ███████╗███████╗",
+    "██║      ██╔═══██╗██╔════╝██╔════╝",
+    "██║      ██║   ██║███████╗█████╗  ",
+    "██║      ██║   ██║╚════██║██╔══╝  ",
+    "███████╗ ╚██████╔╝███████║███████╗ ",
+    "╚══════╝  ╚═════╝ ╚══════╝╚══════╝ "
 };
-const int LOSE_ART_HEIGHT = 6; // Chiều cao của chữ LOSE
-void DrawGameOverScreen(int selectedOption) {
-    // --- KHAI BÁO CÁC THAM SỐ GIAO DIỆN ---
-    const int BOX_WIDTH = 60;
-    const int BOX_X = CenterX(std::string(BOX_WIDTH, ' '));
-    const int BOX_Y = 15;
-    const int WIN_LOSE_Y = 20;
-    const int P1_X = 25;
-    const int P2_X = 100;
+// 3. X ART (Giữ nguyên vector)
+const std::vector<std::string> ART_X_BIG = {
+    "██╗  ██╗",
+    "╚██╗██╔╝",
+    " ╚███╔╝ ",
+    " ██╔██╗ ",
+    "██╔╝ ██╗",
+    "╚═╝  ╚═╝"
+};
+// 4. O ART (Giữ nguyên vector)
+const std::vector<std::string> ART_O_BIG = {
+    " ██████╗ ",
+    "██╔═══██╗",
+    "██║   ██║",
+    "██║   ██║",
+    "╚██████╔╝",
+    " ╚═════╝ "
+};
+// Hàm vẽ căn giữa một dòng text vào trong khung
+// --- 2. HÀM VẼ 1 DÒNG TRONG HỘP (Helper Function) ---
+// ==================================================================================
+// PHẦN 2: HÀM VẼ DÒNG TRONG HỘP (CĂN CHỈNH THẲNG TẮP)
+// ==================================================================================
+void DrawFixedLine(int startX, int y, std::string label, std::string value, int width) {
+    GotoXY(startX, y);
+    SetBgRGB(89, 79, 175); // NỀN TÍM
+    SetColorRGB(0, 0, 0);  // CHỮ ĐEN
 
-    // --- 1. DỌN DẸP MÀN HÌNH VÀ VẼ TIÊU ĐỀ ---
-    ClearScreenWithColor(89, 79, 175);
-    GotoXY(CenterX("Game results"), 10);
-    std::cout << "Game results";
+    // 1. Vẽ viền trái
+    std::cout << "| ";
 
-    // --- 2. XÁC ĐỊNH THÔNG TIN THẮNG/THUA ---
-    std::string resultMessage;
-    int winner = 0; // 0=Hòa, 1=P1, 2=P2
+    // 2. Vẽ Nhãn
+    std::cout << label;
 
-    if (_gameWinner == 1) {
-        winner = 1;
-        resultMessage = "Player " + std::string(_player1_name) + " (X) won the game";
-    }
-    else if (_gameWinner == 2) {
-        winner = 2;
-        resultMessage = "Player " + std::string(_player2_name) + " (O) won the game";
-    }
-    else {
-        resultMessage = "The game ended in a draw!";
-    }
+    // 3. Căn chỉnh khoảng cách để cột giá trị thẳng hàng (Bắt đầu tại ký tự thứ 12)
+    int currentPos = 2 + label.length();
+    int valueStartPos = 12;
+    if (currentPos < valueStartPos) std::cout << std::string(valueStartPos - currentPos, ' ');
 
-    if (winner != 0) {
-        // Vẽ WIN cho người thắng
-        for (int i = 0; i < WIN_ART_HEIGHT; ++i) {
-            GotoXY((winner == 1) ? P1_X : P2_X, WIN_LOSE_Y + i);
-            std::cout << WIN_ART[i]; // Vẽ dòng thứ i của chữ WIN
+    // 4. Vẽ Giá trị
+    std::cout << value;
+
+    // 5. Lấp đầy khoảng trắng còn lại
+    int printedLen = (currentPos > valueStartPos ? currentPos : valueStartPos) + value.length();
+    int padding = width - 2 - printedLen; // width - 2 viền
+    if (padding < 0) padding = 0;
+    std::cout << std::string(padding, ' ');
+
+    // 6. Vẽ viền phải
+    std::cout << "|";
+}
+
+
+// ==================================================================================
+// PHẦN 3: HÀM CHÍNH (DRAW GAME OVER SCREEN)
+// ==================================================================================
+void DrawGameOverScreen(int selectedOption, bool drawAll) {
+    // --- THÔNG SỐ KHUNG ---
+    const int BOX_WIDTH = 50;
+    const int BOX_HEIGHT = 17; // Cao 17 dòng để chứa nút bấm thoải mái
+
+    // Tự động căn giữa màn hình
+    const int BOX_X = (CONSOLE_WIDTH - BOX_WIDTH) / 2;
+    const int BOX_Y = 14;
+
+    // Tọa độ vẽ ASCII ART (X cách xa khung ra một chút)
+    const int ART_Y = BOX_Y + 4;
+    const int P1_ART_X = BOX_X - 42;      // Bên trái
+    const int P2_ART_X = BOX_X + BOX_WIDTH + 2; // Bên phải
+
+    // =============================================================
+    // A. VẼ NỀN, TIÊU ĐỀ, KHUNG & ART (CHỈ CHẠY 1 LẦN)
+    // =============================================================
+    if (drawAll) {
+        ClearScreenWithColor(89, 79, 175); // Xóa màn hình màu tím
+
+        // Vẽ gạch nền (nếu có hàm này)
+        DrawBrickp(0, 47);
+
+        // Tiêu đề
+        SetBgRGB(89, 79, 175);
+        SetColorRGB(255, 255, 0); // Vàng
+        GotoXY((CONSOLE_WIDTH - 12) / 2, 10); // Căn giữa chữ "Game results"
+        std::cout << "Game results";
+
+        // Hướng dẫn phím bấm
+        SetColorRGB(255, 255, 255);
+        std::string guide = "'Tab': Move   'Enter': Select   'ESC': Back";
+        GotoXY((CONSOLE_WIDTH - guide.length()) / 2, 45);
+        std::cout << guide;
+
+        // --- XỬ LÝ LOGIC THẮNG/THUA ---
+        std::string headerMsg;
+        int winner = 0;
+        if (_gameWinner == 1) { winner = 1; headerMsg = "Player " + std::string(_player1_name) + " (X) won!"; }
+        else if (_gameWinner == 2) { winner = 2; headerMsg = "Player " + std::string(_player2_name) + " (O) won!"; }
+        else { headerMsg = "It's a Draw!"; }
+
+        // --- VẼ ASCII ART (X WIN / O LOSE) ---
+        if (winner != 0) {
+            SetBgRGB(89, 79, 175); // Nền tím
+
+            const std::vector<std::string>* p1_Char;   // Hình X
+            const std::vector<std::string>* p1_Result; // Hình WIN/LOSE
+            const std::vector<std::string>* p2_Char;   // Hình O
+            const std::vector<std::string>* p2_Result; // Hình WIN/LOSE
+
+            int colorP1, colorP2;
+
+            if (winner == 1) { // X THẮNG
+                p1_Char = &ART_X_BIG; p1_Result = &WIN_ART;  colorP1 = 0xFFD700; // Vàng
+                p2_Char = &ART_O_BIG; p2_Result = &LOSE_ART; colorP2 = 0x696969; // Xám
+            }
+            else { // O THẮNG
+                p1_Char = &ART_X_BIG; p1_Result = &LOSE_ART; colorP1 = 0x696969; // Xám
+                p2_Char = &ART_O_BIG; p2_Result = &WIN_ART;  colorP2 = 0xFFD700; // Vàng
+            }
+
+            // --- VẼ BÊN TRÁI (P1) ---
+            SetColorRGB((colorP1 >> 16) & 0xFF, (colorP1 >> 8) & 0xFF, colorP1 & 0xFF);
+
+            for (int i = 0; i < ART_HEIGHT; ++i) {
+                // 1. Vẽ chữ X
+                GotoXY(P1_ART_X, ART_Y + i);
+                std::cout << (*p1_Char)[i];
+
+                // 2. Vẽ WIN/LOSE (Cách lề trái P1 đúng 12 ô)
+                // Dùng GotoXY để tách rời 2 chữ ra, không cho nó dính vào nhau
+                GotoXY(P1_ART_X + 12, ART_Y + i);
+                std::cout << (*p1_Result)[i];
+            }
+
+            // --- VẼ BÊN PHẢI (P2) ---
+            SetColorRGB((colorP2 >> 16) & 0xFF, (colorP2 >> 8) & 0xFF, colorP2 & 0xFF);
+
+            for (int i = 0; i < ART_HEIGHT; ++i) {
+                // 1. Vẽ O
+                GotoXY(P2_ART_X, ART_Y + i);
+                std::cout << (*p2_Char)[i];
+
+                // 2. Vẽ WIN/LOSE (Cách lề trái P2 đúng 12 ô)
+                GotoXY(P2_ART_X + 12, ART_Y + i);
+                std::cout << (*p2_Result)[i];
+            }
         }
-        // Vẽ LOSE cho người thua
-        for (int i = 0; i < LOSE_ART_HEIGHT; ++i) {
-            GotoXY((winner == 1) ? P2_X : P1_X, WIN_LOSE_Y + i);
-            std::cout << LOSE_ART[i]; // Vẽ dòng thứ i của chữ LOSE
+
+        // --- VẼ HỘP KẾT QUẢ (NÉT ĐỨT + NỀN TÍM) ---
+        SetBgRGB(89, 79, 175);
+        SetColorRGB(0, 0, 0); // Viền đen
+
+        // Nắp hộp
+        GotoXY(BOX_X, BOX_Y);
+        std::cout << "+" << std::string(BOX_WIDTH - 2, '-') << "+";
+
+        // Thân hộp
+        for (int i = 1; i < BOX_HEIGHT; i++) {
+            GotoXY(BOX_X, BOX_Y + i);
+            std::cout << "|" << std::string(BOX_WIDTH - 2, ' ') << "|";
         }
+
+        // Đáy hộp
+        GotoXY(BOX_X, BOX_Y + BOX_HEIGHT);
+        std::cout << "+" << std::string(BOX_WIDTH - 2, '-') << "+";
+
+        // --- ĐIỀN NỘI DUNG ---
+        GotoXY(BOX_X + 1, BOX_Y + 2);
+        int padHead = (BOX_WIDTH - 2 - headerMsg.length()) / 2;
+        if (padHead < 0) padHead = 0;
+        std::cout << std::string(padHead, ' ') << headerMsg;
+
+        // Dữ liệu
+        std::stringstream ss_score;
+        ss_score << std::setw(2) << std::setfill('0') << _player1_score << "  :  "
+            << std::setw(2) << std::setfill('0') << _player2_score;
+
+        std::string names = std::string(_player1_name) + "(X) | (O)" + std::string(_player2_name);
+
+        // Moves: 5 (X) | (O) 4
+        int xMoves = (_moveCount + 1) / 2;
+        int oMoves = _moveCount / 2;
+        std::string moves = std::to_string(xMoves) + " (X) | (O) " + std::to_string(oMoves);
+
+        // Vẽ dòng (Thẳng tắp)
+        DrawFixedLine(BOX_X, BOX_Y + 4, "Name:", names, BOX_WIDTH);
+        DrawFixedLine(BOX_X, BOX_Y + 6, "Score:", ss_score.str(), BOX_WIDTH);
+        DrawFixedLine(BOX_X, BOX_Y + 8, "Mode:", "2 Players", BOX_WIDTH);
+        DrawFixedLine(BOX_X, BOX_Y + 10, "Moves:", moves, BOX_WIDTH);
     }
 
+    // =============================================================
+    // B. VẼ NÚT BẤM (LUÔN CHẠY - ANTI GHOSTING)
+    // =============================================================
+    SetBgRGB(89, 79, 175); // Luôn giữ nền tím
 
-    // --- 4. TẠO NỘI DUNG VĂN BẢN CHO KHUNG ---
-    std::stringstream ss_score, ss_moves;
-    ss_score << std::setw(2) << std::setfill('O') << _player1_score << " | " << std::setw(2) << std::setfill('O') << _player2_score;
-    int p1_moves = (_moveCount + 1) / 2;
-    int p2_moves = _moveCount / 2;
-    ss_moves << p1_moves << " (X) | (O) " << p2_moves;
+    int centerX = BOX_X + (BOX_WIDTH / 2);
+    int ySave = BOX_Y + 13; // Save nằm dòng 13
+    int yPlay = BOX_Y + 15; // Play/Back nằm dòng 15 (Sát đáy)
 
-    std::string nameLine = "Name:  " + std::string(_player1_name) + " (X) | (O) " + std::string(_player2_name);
-    std::string scoreLine = "Score: " + ss_score.str();
-    std::string modeLine = "Mode:  2 Players";
-    std::string movesLine = "Moves: " + ss_moves.str();
+    // 1. Nút SAVE (Giữa)
+    GotoXY(centerX - 4, ySave);
+    if (selectedOption == 0) { SetColorRGB(255, 255, 255); std::cout << "[ Save ]"; }
+    else { SetColorRGB(80, 80, 80); std::cout << "  Save  "; }
 
-    // --- 5. VẼ KHUNG VÀ NỘI DUNG (DÙNG KÝ TỰ TRỰC TIẾP) ---
-    // Hàm lambda để căn lề phải cho chuỗi
-    auto padString = [&](const std::string& s) {
-        return s + std::string(BOX_WIDTH - 4 - s.length(), ' ');
-        };
+    // 2. Nút PLAY AGAIN (Trái)
+    GotoXY(BOX_X + 4, yPlay);
+    if (selectedOption == 1) { SetColorRGB(255, 255, 255); std::cout << "[ Play again ]"; }
+    else { SetColorRGB(80, 80, 80); std::cout << "  Play again  "; }
 
-    // Vẽ viền trên
-    GotoXY(BOX_X, BOX_Y);
-    std::cout << "┌" << std::string(BOX_WIDTH - 2, '─') << "┐";
+    // 3. Nút BACK (Phải)
+    GotoXY(BOX_X + BOX_WIDTH - 12, yPlay);
+    if (selectedOption == 2) { SetColorRGB(255, 255, 255); std::cout << "[ Back ]"; }
+    else { SetColorRGB(80, 80, 80); std::cout << "  Back  "; }
 
-    // Vẽ các dòng nội dung và viền hai bên
-    GotoXY(BOX_X, BOX_Y + 1); std::cout << "│ " << padString(resultMessage) << " │";
-    GotoXY(BOX_X, BOX_Y + 2); std::cout << "│ " << std::string(BOX_WIDTH - 4, ' ') << " │";
-    GotoXY(BOX_X, BOX_Y + 3); std::cout << "│ " << padString(nameLine) << " │";
-    GotoXY(BOX_X, BOX_Y + 4); std::cout << "│ " << padString(scoreLine) << " │";
-    GotoXY(BOX_X, BOX_Y + 5); std::cout << "│ " << padString(modeLine) << " │";
-    GotoXY(BOX_X, BOX_Y + 6); std::cout << "│ " << padString(movesLine) << " │";
-    GotoXY(BOX_X, BOX_Y + 7); std::cout << "│ " << std::string(BOX_WIDTH - 4, ' ') << " │";
-
-    // Vẽ các nút
-    std::string saveText = (selectedOption == 0) ? ">> Save <<" : "   Save   ";
-    std::string playAgainText = (selectedOption == 1) ? ">> Play again <<" : "   Play again   ";
-    std::string backText = (selectedOption == 2) ? ">> Back <<" : "   Back   ";
-    std::string buttonLine = saveText + std::string(10, ' ') + playAgainText + std::string(10, ' ') + backText;
-    GotoXY(BOX_X, BOX_Y + 8); std::cout << "│ " << padString(buttonLine) << " │";
-
-    // Vẽ viền dưới
-    GotoXY(BOX_X, BOX_Y + 9);
-    std::cout << "└" << std::string(BOX_WIDTH - 2, '─') << "┘";
+    SetColorRGB(0, 0, 0); // Reset
 }
 void DrawGameUI() {
     ClearScreenWithColor(89, 79, 175);
