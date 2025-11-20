@@ -7,6 +7,7 @@
 #include <iomanip>    
 #include <string>
 #include "truecolor_utils.h"
+#include "newgame.h"
 // #include <fcntl.h> // Không cần nữa
 // #include <io.h> // Không cần nữa
 #include "GameState.h"
@@ -14,6 +15,30 @@
 #include <thread> // Cần cho hiệu ứng (nếu có)
 #include <chrono> // Cần cho hiệu ứng (nếu có)
 
+// Màu nền chính (Tím Lavender nhạt - mã màu bạn đã dùng trước đó)
+#define BG_PURPLE_R  202
+#define BG_PURPLE_G  196
+#define BG_PURPLE_B  248
+
+// Màu chữ khi KHÔNG chọn (Tím đậm hơn)
+#define TEXT_NORMAL_R 80
+#define TEXT_NORMAL_G 60
+#define TEXT_NORMAL_B 120
+
+// Màu chữ khi ĐANG CHỌN (Hồng rực - nổi bật)
+#define TEXT_SELECT_R 255
+#define TEXT_SELECT_G 100
+#define TEXT_SELECT_B 180
+
+// Màu viền khung (Tím đen)
+#define BORDER_R 100
+#define BORDER_G 100
+#define BORDER_B 200
+
+// Màu logo (ví dụ: Logo CARO LEGENDS)
+#define LOGO_R 163
+#define LOGO_G 87
+#define LOGO_B 213
 
 using namespace std;
 const char* MENU_ITEMS[] = { "NEW GAME", "LOAD GAME", "SETTING", "GUIDE", "ABOUT", "EXIT" };
@@ -25,6 +50,7 @@ const int PAUSE_START_Y = 9;
 const int FRAME_START_X = 99;
 const int FRAME_WIDTH = 28;
 const char* LOGO_LINE = "CARO LEGENDS";
+const int MENU_X_OFFSET = 10;
 
 _POINT _A[BOARD_SIZE][BOARD_SIZE];
 bool _TURN = true;
@@ -385,39 +411,82 @@ int AskContinue() {
     return toupper(_getch());
 }
 
+void DrawFancyBox(int x, int y, int width, std::string text, bool isSelected) {
+    // 1. Thiết lập màu nền chung
+    SetBgRGB(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B); // Nền hộp
+    SetColorRGB(BORDER_R, BORDER_G, BORDER_B);
+
+    // --- VẼ VIỀN TRÊN ---
+    GotoXY(x, y);
+    std::cout << "╔";
+    for (int i = 0; i < width; i++) std::cout << "═";
+    std::cout << "╗";
+
+    // --- VẼ THÂN GIỮA & CHỮ ---
+    GotoXY(x, y + 1);
+    std::cout << "║"; // Viền trái
+
+    // Tính toán khoảng trắng để căn giữa chữ trong hộp
+    int textLen = text.length();
+    int paddingLeft = (width - textLen) / 2;
+    int paddingRight = width - textLen - paddingLeft;
+
+    // In khoảng trắng bên trái
+    for (int i = 0; i < paddingLeft; i++) std::cout << " ";
+
+    // IN CHỮ (Đổi màu nếu được chọn)
+    if (isSelected) {
+        SetColorRGB(TEXT_SELECT_R, TEXT_SELECT_G, TEXT_SELECT_B); // Đỏ
+    }
+    else {
+        SetColorRGB(TEXT_NORMAL_R, TEXT_NORMAL_G, TEXT_NORMAL_B); // Đen xanh
+    }
+    std::cout << text;
+
+    // Trả lại màu viền đen để vẽ tiếp
+    SetColorRGB(BORDER_R, BORDER_G, BORDER_B);
+
+    // In khoảng trắng bên phải
+    for (int i = 0; i < paddingRight; i++) std::cout << " ";
+
+    std::cout << "║"; // Viền phải
+
+    // --- VẼ VIỀN DƯỚI ---
+    GotoXY(x, y + 2);
+    std::cout << "╚";
+    for (int i = 0; i < width; i++) std::cout << "═";
+    std::cout << "╝";
+}
+
 void DrawMenuItem(int index, bool is_selected) {
     if (index < 0 || index >= TOTAL_ITEMS) return;
 
     std::string menuText = std::string(MENU_ITEMS[index]);
 
-    if (is_selected) {
-        SetColorRGB(255, 100, 180); // Chữ NỔI BẬT (Hồng)
-    }
-    else {
-        SetColorRGB(80, 60, 120); // Chữ BÌNH THƯỜNG (Tím than)
-    }
+    // Chiều rộng cố định cho cái hộp (để tất cả nút bằng nhau)
+    const int BOX_WIDTH = 30;
 
-    SetBgRGB(203, 196, 248); // Nền Lavender (mã màu từ code cũ)
+    // Tính tọa độ X để cái hộp nằm giữa màn hình
+    int x = CenterX(std::string(BOX_WIDTH + 2, ' ')); // +2 vì tính cả viền
 
-    int text_length = menuText.length();
-    int x = FRAME_START_X + (FRAME_WIDTH - text_length) / 2;
-    int y = START_Y + index * 2 + 5;
+    // Tính tọa độ Y. Mỗi hộp cao 3 dòng, cộng thêm 1 dòng khoảng cách = 4
+    int y = START_Y + (index * 3);
 
-    GotoXY(x, y);
-    std::cout << menuText;
+    // Gọi hàm vẽ hộp
+    DrawFancyBox(x, y, BOX_WIDTH, menuText, is_selected);
 }
 
 void DrawFullMenu(int selected_index) {
-    ClearScreenWithColor(203, 196, 248); // "Sơn" nền Lavender
+    ClearScreenWithColor(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B); // "Sơn" nền Lavender
 
-    int i = 25;
+    int i = 33;
     GotoXY(i, 1);
-    SetColorRGB(163, 87, 213);
+    SetColorRGB(LOGO_R, LOGO_G, LOGO_B);
 
     // XÓA BỎ: _setmode(_fileno(stdout), _O_U16TEXT);
 
     // SỬA LẠI: Dùng std::cout
-    std::cout << "████████╗██╗  ██╗███████╗     ██████╗ █████╗ ██████╗  ██████╗     ██████╗  █████╗ ███╗   ███╗███████╗\n"; GotoXY(i, 2);
+    std::cout << "████████╗██╗  ██╗███████╗       █████╗  █████╗ ██████╗  ██████╗     ██████╗  █████╗ ███╗   ███╗███████╗\n"; GotoXY(i, 2);
     std::cout << "╚══██╔══╝██║  ██║██╔════╝     ██╔════╝██╔══██╗██╔══██╗██╔═══██╗    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝\n"; GotoXY(i, 3);
     std::cout << "   ██║   ███████║█████╗       ██║     ███████║██████╔╝██║   ██║    ██║  ███╗███████║██╔████╔██║█████╗  \n"; GotoXY(i, 4);
     std::cout << "   ██║   ██╔══██║██╔══╝       ██║     ██╔══██║██╔══██╗██║   ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  \n"; GotoXY(i, 5);
@@ -425,6 +494,8 @@ void DrawFullMenu(int selected_index) {
     std::cout << "   ╚═╝   ╚═╝  ╚═╝╚══════╝      ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝\n";
 
     // XÓA BỎ: _setmode(_fileno(stdout), _O_TEXT);
+    SetBgRGB(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B); // Nền hướng dẫn
+    SetColorRGB(TEXT_NORMAL_R, TEXT_NORMAL_G, TEXT_NORMAL_B);
 
     for (int i = 0; i < TOTAL_ITEMS; i++) {
         DrawMenuItem(i, i == selected_index);

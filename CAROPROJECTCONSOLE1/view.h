@@ -3,8 +3,8 @@
 #include <windows.h>
 #include <string>
 //*****BIENTOANCUC*****
-#define CONSOLE_WIDTH 190
-#define CONSOLE_HEIGHT 45
+#define CONSOLE_WIDTH 165
+#define CONSOLE_HEIGHT 55
 // --- BƯỚC 2: KÍCH THƯỚC VẼ CỦA 1 Ô ---
 #define CELL_VISUAL_WIDTH 4
 #define CELL_VISUAL_HEIGHT 2
