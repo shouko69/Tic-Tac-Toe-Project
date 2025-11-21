@@ -1,28 +1,38 @@
 ﻿#include "Model.h"
 #include "View.h"
+#include "GameState.h"
 
 int _X = 0;
 int _Y = 0;
 int _COMMAND;
+char _player1_name[MAX_NAME_LEN];
+char _player2_name[MAX_NAME_LEN];
+int _player1_score; // Dùng cho WINS
+int _player2_score; // Dùng cho WINS
+int _moveCount;     // Dùng cho MOVES
+int _currentPlayer;
+int _gameWinner;
 
 void ResetData() {
-	for (int i = 0; i < BOARD_SIZE; i++) {
-		for (int j = 0; j < BOARD_SIZE; j++) {
-			_A[i][j].x = 4 * j + LEFT + 2; 
-			_A[i][j].y = 2*i + TOP + 1; 
-			_A[i][j].c = 0; 
-		}
-	}
-	_TURN = true; _COMMAND = -1; // Gán lượt và phím mặc định
-	_X = _A[0][0].x; _Y = _A[0][0].y; // Thiết lập lại tọa độ hiện hành ban đầu
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        for (int j = 0; j < BOARD_SIZE; j++) {
+            _A[i][j].x = 0; // Không cần dùng tới nữa
+            _A[i][j].y = 0; // Không cần dùng tới nữa
+            _A[i][j].c = 0; // 0: Chưa đánh
+        }
+    }
+    _TURN = true;
+    _COMMAND = -1;
+
+    // --- QUAN TRỌNG NHẤT: Đặt về 0 để bắt đầu ở góc bàn cờ ---
+    _X = 0;
+    _Y = 0;
 }
 
 void GabageCollect() {
 	// Dọn dẹp tài nguyên nếu có khai báo con trỏ
 }
 //ktra ban co xem co thg nao win khong
-
-
 
 // Kiem tra trang thai ban co
 int TestBoard() {
@@ -43,20 +53,23 @@ int TestBoard() {
 
 // ham danh dau vao ma tran ban co
 int CheckBoard(int pX, int pY) {
-	for (int i = 0; i < BOARD_SIZE; i++) {
-		for (int j = 0; j < BOARD_SIZE; j++) {
-			if (_A[i][j].x == pX && _A[i][j].y == pY && _A[i][j].c == 0) {
-				if (_TURN == true) {
-					_A[i][j].c = -1; // neu luot hien hanh la true thi c = -1 
-				}
-				else {
-					_A[i][j].c = 1; // Nếu lượt hiện hành là false thì c = 1
-				}
-				return _A[i][j].c;
-			}
-		}
-	}
-	return 0;
+    // 1. Kiểm tra xem index có nằm trong bàn cờ không để tránh lỗi tràn mảng
+    if (pX < 0 || pX >= BOARD_SIZE || pY < 0 || pY >= BOARD_SIZE) {
+        return 0; // Index không hợp lệ
+    }
+
+    // 2. Kiểm tra ô đó đã có người đánh chưa
+    if (_A[pY][pX].c == 0) { // Lưu ý: _A[dòng][cột] nên là _A[pY][pX]
+        if (_TURN == true) {
+            _A[pY][pX].c = -1; // Player 1 (X)
+        }
+        else {
+            _A[pY][pX].c = 1;  // Player 2 (O)
+        }
+        return _A[pY][pX].c;
+    }
+
+    return 0; // Ô này đã bị đánh rồi
 }
 
 bool IsFullBoard() {

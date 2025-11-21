@@ -2,7 +2,6 @@
 #include "Control.h"
 #include "Model.h"
 #include "GameState.h"
-#include "HandleInput.h"
 #include <conio.h>
 #include <ctype.h>
 #include <iostream>
@@ -14,26 +13,18 @@
 
 GameState currentState = MENU;
 
+
 int main() {
     // ----- BẮT ĐẦU THIẾT LẬP CONSOLE -----
-    // BƯỚC 1: CHỌN "VIÊN GẠCH" TRƯỚC TIÊN!
-    // Đặt font chữ thành một kích thước nhỏ để tăng "độ phân giải".
-    SetConsoleFont(L"Terminal", 0, 15);
-
-    // Bạn có thể thử 8x12 hoặc font "Consolas" nếu muốn
-    // BƯỚC 2: BÂY GIỜ MỚI "XÂY TƯỜNG"!
-    // Đặt kích thước cửa sổ bằng số lượng "viên gạch" đã chọn.
-    ResizeConsoleWindow(CONSOLE_WIDTH, CONSOLE_HEIGHT);
-    // BƯỚC 3: CÁC THIẾT LẬP KHÁC
-    // Kích hoạt màu 24-bit
-    EnableTrueColor();
-    // Khóa kích thước cửa sổ để người dùng không thay đổi được
-    FixConsoleWindow();
-    // Hỗ trợ ký tự Unicode (cho các ký tự vẽ vời phức tạp)
-    InitConsole(); 
-    StartIntro();
     CenterConsole();
-   
+    SetConsoleFont(L"Terminal", 0, 15);
+    ResizeConsoleWindow(CONSOLE_WIDTH, CONSOLE_HEIGHT);
+    EnableTrueColor();
+    FixConsoleWindow();
+    InitConsole(); 
+    CenterConsole();
+
+    StartIntro();
 
     while (true) {
         switch (currentState) {
@@ -44,10 +35,7 @@ int main() {
 
             switch (choice) {
             case 0: // PLAY
-                SetCursorVisible(true); // bật con trỏ cho bàn cờ
-                StartGame();            // reset bàn cờ, _X/_Y về ô đầu
-                /*StartTimerThread();*/
-                currentState = PLAY;
+                currentState = NEW_GAME_MODE;
                 break;
             case 1: currentState = LOAD; break;
             case 2: currentState = SETTINGS; break;
@@ -57,65 +45,87 @@ int main() {
             }
             break;
         }
+        case NEW_GAME_MODE: {
+            // Bước 1: Gọi hàm xử lý. Chương trình sẽ "dừng" ở đây
+            // cho đến khi người dùng đưa ra một lựa chọn (Enter hoặc ESC).
+            int choice = HandleNewGameMenuInput();
 
-                 // --- TRẠNG THÁI CHƠI GAME ---
-        case PLAY: {
-            // --- PHẦN 1: XỬ LÝ INPUT (CHỈ KHI CÓ PHÍM BẤM) ---
-            // Nhiệm vụ của phần này chỉ là CẬP NHẬT TRẠNG THÁI (thay đổi giá trị _X, _Y, _A...)
-            if (_kbhit()) {
-                bool validEnter = true;
-                _COMMAND = toupper(_getch());
+            // Bước 2: Xử lý kết quả mà hàm vừa trả về.
+            switch (choice) {
+            case 1: // Người dùng chọn "2 PLAYERS"
+                currentState = PLAYER_NAME_INPUT;
+                break;
 
-                if (_COMMAND == 27) { // ESC → Pause Menu
-                    currentState = PAUSE;
-                    SetCursorVisible(false);
-                    break; // Thoát khỏi case PLAY ngay
-                }
+            case 2: // Người dùng chọn "BACK"
+                currentState = MENU;
+                break;
 
-                // Di chuyển con trỏ (chỉ thay đổi biến _X, _Y)
-                else if (_COMMAND == 'A') MoveLeft();
-                else if (_COMMAND == 'D') MoveRight();
-                else if (_COMMAND == 'W') MoveUp();
-                else if (_COMMAND == 'S') MoveDown();
-
-                // Đánh cờ (thay đổi mảng _A và vẽ quân cờ MỘT LẦN để có phản hồi ngay)
-                else if (_COMMAND == 13) {
-                    GotoXY(_X, _Y); // Di chuyển tới ô để vẽ quân cờ
-                    int checkResult = CheckBoard(_X, _Y);
-                    switch (checkResult) {
-                    case -1:
-                        SetColorRGB(255, 0, 0); std::cout << "X"; break;
-                    case 1:
-                        SetColorRGB(0, 0, 255); std::cout << "O"; break;
-                    case 0:
-                        validEnter = false; break;
-                    }
-
-                    if (validEnter) {
-                        int status = ProcessFinish(TestBoard());
-                        if (status != 2) { // Nếu game đã kết thúc (thắng, thua, hòa)
-                            if (AskContinue() != 'Y') {
-                                currentState = MENU;
-                                SetCursorVisible(false);
-                            }
-                            else {
-                                StartGame();
-                                SetCursorVisible(true);
-                            }
-                            break; // Thoát khỏi case PLAY
-                        }
-                    }
-                }
+            case ESCAPE_KEY: // Người dùng nhấn phím ESC
+                currentState = MENU;
+                break;
             }
 
-            // --- PHẦN 2: CẬP NHẬT & VẼ (LUÔN LUÔN CHẠY) ---
-            // Bất kể người dùng có bấm phím hay không, lệnh này phải được gọi
-            // để "ghim" con trỏ vào đúng vị trí _X, _Y hiện tại.
-            // Đây là dòng code sửa cả 2 lỗi của bạn.
-            GotoXY(_X, _Y);
+            break; // Kết thúc case NEW_GAME_MODE
+        }
+        case PLAYER_NAME_INPUT: {
+            
+            
 
-            // --- PHẦN 3: TẠM NGHỈ ---
+            // Gọi hàm xử lý. Chương trình sẽ "kẹt" lại bên trong hàm này
+            // cho đến khi người dùng hoàn tất (trả về true) hoặc thoát (trả về false).
+            bool isReady = HandlePlayerNameInput();
+            
+            // Sử dụng switch-case để xử lý kết quả boolean trả về.
+            // Mặc dù chỉ có 2 trường hợp, cách này vẫn đảm bảo tính nhất quán.
+            switch (isReady) {
+            case true: // Người chơi đã xác nhận tên
+                // Chuyển sang trạng thái chơi game 2 người.
+                // Bạn sẽ cần tạo một case cho PLAY_2P.
+                StartGame();
+                currentState = PLAY_2P;
+                break;
+
+            case false: // Người chơi đã chọn thoát ra
+                // Quay trở lại màn hình chọn chế độ chơi.
+                currentState = NEW_GAME_MODE;
+                break;
+            }
+
+            // Dọn dẹp bộ đệm bàn phím sau khi thoát khỏi vòng lặp của HandlePlayerNameInput.
+            // Đây là bước cực kỳ quan trọng để tránh lỗi "trôi lệnh".
+
+            break; // Kết thúc case PLAYER_NAME_INPUT
+        }
+                 // --- TRẠNG THÁI CHƠI GAME ---
+        case PLAY_2P:{
+            
+            Handle2PlayerGame();
+            GotoBoard(_X, _Y);
             Sleep(15);
+            break;
+        }
+
+        case GAME_OVER: {
+            SetCursorVisible(false);
+            // Gọi hàm xử lý và chờ nó trả về kết quả
+            int choice = HandleGameOverScreen();
+
+            // Xử lý kết quả
+            switch (choice) {
+            case 0:
+                ShowSaveGameScreen();
+                break;
+            case 1: // Chọn "Play again"
+                StartGame();
+                currentState = PLAY_2P;
+                break;
+            case 2: // Chọn "Back" hoặc nhấn ESC
+                _player1_score = 0;
+                _player2_score = 0;
+                currentState = MENU;
+                break;
+            }
+            
             break;
         }
 
@@ -131,21 +141,21 @@ int main() {
 
             case 0: // Resume
                 // --- BẮT BUỘC SỬA LỖI Ở ĐÂY ---
-                ClearScreenWithColor(255, 255, 255);
-                SetColorRGB(0, 0, 0);
+                DrawGameUI();
+                
                 DrawBoard(BOARD_SIZE);        // 2. Vẽ lại khung bàn cờ (từ View.h)
                 RedrawBoardState(); // 3. Vẽ lại các quân X, O đã đánh (hàm mới ở trên)
                 // ---------------------------------
 
                 SetCursorVisible(true); // Bật con trỏ
-                currentState = PLAY;    // Quay lại trạng thái chơi
+                currentState = PLAY_2P;    // Quay lại trạng thái chơi
                 break;
 
             case 1: // Restart
                 // StartGame() đã bao gồm cả việc vẽ bàn cờ mới
                 SetCursorVisible(true);
                 StartGame();
-                currentState = PLAY;
+                currentState = PLAY_2P;
                 break;
 
             case 2: // Save
@@ -166,45 +176,73 @@ int main() {
 
                   // --- SETTINGS / LOAD / GUIDE / ABOUT ---
         case SETTINGS:
+            break;
         case LOAD: {
+            // Reset dữ liệu tạm trước khi load
             ResetData();
-            // ShowLoadGameScreen sẽ tự lo việc xóa menu chính, vẽ màn hình load,
-            // và gọi ApplyLoadedData nếu người dùng chọn một file.
-            // Nó chỉ trả về true (thành công) hoặc false (hủy bỏ).
+
             bool loadSuccess = ShowLoadGameScreen();
 
             if (loadSuccess) {
-                // Dữ liệu ĐÃ được áp dụng bên trong ShowLoadGameScreen.
-                // Bây giờ chúng ta chỉ cần vẽ lại trạng thái game mới.
-
-                // 1. Xóa màn hình Load để chuẩn bị vẽ bàn cờ
-                ClearScreenWithColor(255, 255, 255); // Dùng màu nền của bàn cờ
-
-                // 2. Đặt lại màu vẽ (ví dụ: màu đen cho khung)
+                // --- BƯỚC 1: VẼ LẠI UI CƠ BẢN ---
+                ClearScreenWithColor(89, 79, 175);
                 SetColorRGB(0, 0, 0);
+                DrawGameUI();
 
-                // 3. Vẽ khung bàn cờ trống
-                DrawBoard(BOARD_SIZE);
+                // --- BƯỚC 2: KIỂM TRA XEM FILE SAVE NÀY ĐÃ KẾT THÚC CHƯA ---
+                // Gọi hàm kiểm tra thắng thua ngay lập tức trên dữ liệu vừa load
+                int status = TestBoard();
 
-                // 4. Vẽ lại các quân cờ dựa trên mảng _A đã được cập nhật
-                RedrawBoardState();
+                if (status != 2) {
+                    // => ĐÂY LÀ FILE SAVE ĐÃ KẾT THÚC (CÓ NGƯỜI THẮNG)
 
-                // 5. Di chuyển con trỏ vật lý đến vị trí (_X, _Y) đã được load
-                GotoXY(_X, _Y);
+                    // 1. Dọn sạch bàn cờ
+                    for (int i = 0; i < BOARD_SIZE; i++) {
+                        for (int j = 0; j < BOARD_SIZE; j++) {
+                            _A[i][j].c = 0;
+                        }
+                    }
 
-                // 6. Chuyển trạng thái game sang đang chơi
-                currentState = PLAY;
+                    // --- SỬA LỖI TẠI ĐÂY (RESET BIẾN) ---
+                    _moveCount = 0;      // Reset số nước đi về 0
+                    _currentPlayer = 1;  // Luôn bắt đầu lại là Player 1
+                    _TURN = true;        // Luôn là lượt của X
+                    _X = 0; _Y = 0;      // Con trỏ về góc
 
-                // 7. Hiển thị lại con trỏ
+                    // --- QUAN TRỌNG: VẼ LẠI SỐ MOVES LÊN MÀN HÌNH ---
+                    // Nếu không gọi hàm này, biến đã về 0 nhưng màn hình vẫn hiện số cũ (7)
+                    UpdateDynamic2P_UI();
+                    // -------------------------------------------------
+
+                    // 4. Vẽ lại bàn cờ (Lúc này trắng tinh)
+                    RedrawBoardState();
+
+                    // 5. Thông báo (Tùy chọn)
+                    GotoXY(LEFT, TOP - 2);
+                    SetColorRGB(255, 255, 0); // Màu vàng cho nổi
+                    std::cout << "Loaded finished game. Starting new round...";
+                    SetColorRGB(0, 0, 0);
+                }
+                else {
+                    // Game chưa kết thúc -> Vẽ lại các quân cờ cũ để chơi tiếp
+                    RedrawBoardState();
+                }
+
+                // --- BƯỚC 3: ĐƯA CON TRỎ VỀ ĐÚNG CHỖ ---
+                GotoBoard(_X, _Y);
+
+                // --- BƯỚC 4: VÀO GAME ---
+                currentState = PLAY_2P;
                 SetCursorVisible(true);
             }
-            
             else {
+                // Nếu load thất bại hoặc bấm Back
                 currentState = MENU;
             }
-            break; // Kết thúc case LOAD
+            break;
         }
         case GUIDE:
+            break;
         case ABOUT:
             StartAbout();
             break;

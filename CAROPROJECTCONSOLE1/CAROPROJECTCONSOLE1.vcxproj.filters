@@ -27,13 +27,16 @@
     <ClCompile Include="model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HandleInput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SaveLoad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SaveLoadUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameAssets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="temp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,9 +53,6 @@
     <ClInclude Include="GameState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HandleInput.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="truecolor_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -62,7 +62,7 @@
     <ClInclude Include="SaveLoadUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="newgame.h">
+    <ClInclude Include="GameAssets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
