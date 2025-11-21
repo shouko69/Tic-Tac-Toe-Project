@@ -3,85 +3,78 @@
 #include <vector>
 #include <windows.h>
 #include <string>
-//*****BIENTOANCUC*****
+
+// ==========================================================================
+// 1. CẤU HÌNH KÍCH THƯỚC (BÀN CỜ TO)
+// ==========================================================================
 #define CONSOLE_WIDTH 165
 #define CONSOLE_HEIGHT 55
-// --- BƯỚC 2: KÍCH THƯỚC VẼ CỦA 1 Ô ---
+
+// Kích thước vẽ của 1 ô (Bản to)
 #define CELL_VISUAL_WIDTH 6
 #define CELL_VISUAL_HEIGHT 3
 
-// --- BƯỚC 3: TỰ ĐỘNG TÍNH TOÁN KÍCH THƯỚC THỰC TẾ (VISUAL) ---
+// Tự động tính toán kích thước bàn cờ
 #define BOARD_VISUAL_WIDTH (BOARD_SIZE * CELL_VISUAL_WIDTH + 1)
 #define BOARD_VISUAL_HEIGHT (BOARD_SIZE * CELL_VISUAL_HEIGHT + 1)
 
-// --- BƯỚC 4: CÔNG THỨC CĂN GIỮA CHÍNH XÁC ---
+// Căn giữa bàn cờ
 #define LEFT ((CONSOLE_WIDTH - BOARD_VISUAL_WIDTH) / 2)
 #define TOP  ((CONSOLE_HEIGHT - BOARD_VISUAL_HEIGHT) / 2)
 
-// --- CÁC HẰNG SỐ CỦA MENU ---
+// ==========================================================================
+// 2. CONSTANTS & STRUCTS
+// ==========================================================================
 extern const char* MENU_ITEMS[];
 extern const int TOTAL_ITEMS;
 extern const int START_Y;
-extern const int TOTAL_PAUSE_ITEMS;
 extern const char* PAUSE_ITEMS[];
+extern const int TOTAL_PAUSE_ITEMS;
 extern const int PAUSE_START_Y;
-extern const char* LOGO_LINE; 
-// --- Man hinh chon Mode ---
 extern const char* NEW_GAME_OPTIONS[];
 extern const int TOTAL_NEW_GAME_OPTIONS;
 
-// 1. Struct chứa dữ liệu màu (Copy vào đây)
 struct DrawInstructionTrueColor {
     int y, x, r, g, b, l;
 };
 
-// 2. Khai báo hàm vẽ chung (Engine)
-void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructionTrueColor>& data);
+// ==========================================================================
+// 3. KHAI BÁO HÀM (FUNCTION PROTOTYPES)
+// ==========================================================================
 
-// --- Các hàm thiết lập console ---
+// --- Nhóm Hệ Thống (System & Utils) ---
 bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY);
 void ResizeConsoleWindow(int width, int height);
-void FixConsoleWindow(); 
+void FixConsoleWindow();
 void CenterConsole();
-// *****HAMKHAIBAO*****
-extern int CenterX(const std::string& text);
-extern void GotoXY(int x, int y);
-void GotoBoard(int pX, int pY);
-void DrawBoard(int pSize);
-void RedrawBoardState();
-int ProcessFinish(int pWhoWin);
-int AskContinue();
-void DrawMenuItem(int index, bool is_selected);
-void DrawFullMenu(int selected_index);
-void DrawFullPauseMenu(int selected);
-void DrawPauseMenuItem(int index, bool is_selected);
-void StartAbout();
-// ****CÁC HÀM VẼ UI MỚI****
-void DrawTableCellRGB(const std::string& text, int x, int y, int width, int text_r, int text_g, int text_b, int bg_r, int bg_g, int bg_b);
+int CenterX(const std::string& text);
+void GotoXY(int x, int y);
 void ClearScreenWithColor(int r, int g, int b);
+void DrawTableCellRGB(const std::string& text, int x, int y, int width, int text_r, int text_g, int text_b, int bg_r, int bg_g, int bg_b);
+void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructionTrueColor>& data);
 
-/*
- * Chức năng: Vẽ giao diện cho màn hình chọn chế độ chơi mới.
- */
+// --- Nhóm Intro & Menu ---
+void StartIntro(); // Intro có Loading bar
+void DrawFancyBox(int x, int y, int width, std::string text, bool isSelected);
+void DrawFullMenu(int selected_index);
+void DrawMenuItem(int index, bool is_selected);
 void DrawFullNewGameMenu(int selected_index);
 void DrawNewGameMenuItem(int index, bool is_selected);
+void StartAbout();
 
-/*
- * Chức năng: Vẽ toàn bộ màn hình nhập tên người chơi.
- * Tham số:
- *  - internalState: Trạng thái hiện tại của màn hình (ai đang nhập, ai đang xác nhận).
- *  - selectedButton: Nút nào đang được chọn (0=OK, 1=BACK).
- *  - p1_buffer: Nội dung người chơi 1 đang gõ.
- *  - p2_buffer: Nội dung người chơi 2 đang gõ.
- */
+// --- Nhóm Nhập Tên (Player Name) ---
 void DrawFullPlayerNameScreen();
 void UpdatePlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer);
 
+// --- Nhóm In-Game (Bàn cờ & UI chơi) ---
+void DrawBoard(int pSize);
+void RedrawBoardState(); // Vẽ lại X/O trên bàn cờ
+void GotoBoard(int pX, int pY); // Nhảy đến tâm ô cờ
+void DrawGameUI(); // Vẽ toàn bộ giao diện game (Nền, Bàn cờ, UI tĩnh, UI động)
+void DrawStatic2P_UI(); // Vẽ khung tên, điểm (Chạy 1 lần)
+void UpdateDynamic2P_UI(); // Cập nhật điểm số, lượt đi (Chạy liên tục)
 
-// hien thi result
-void DrawLineInBox(int boxX, int y, int boxWidth, std::string label, std::string value, int colorContent);
-void DrawGameOverScreen(int selectedOption, bool drawAll);
-void DrawStatic2P_UI();
-void UpdateDynamic2P_UI();
-void DrawGameUI();
-
+// --- Nhóm Pause & Kết thúc ---
+void DrawFullPauseMenu(int selected_index);
+void DrawPauseMenuItem(int index, bool is_selected);
+void DrawGameOverScreen(int selectedOption, bool drawAll); // Màn hình kết quả xịn

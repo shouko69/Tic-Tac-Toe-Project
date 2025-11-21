@@ -16,24 +16,15 @@ GameState currentState = MENU;
 
 int main() {
     // ----- BẮT ĐẦU THIẾT LẬP CONSOLE -----
-    // BƯỚC 1: CHỌN "VIÊN GẠCH" TRƯỚC TIÊN!
-    // Đặt font chữ thành một kích thước nhỏ để tăng "độ phân giải".
+    CenterConsole();
     SetConsoleFont(L"Terminal", 0, 15);
-
-    // Bạn có thể thử 8x12 hoặc font "Consolas" nếu muốn
-    // BƯỚC 2: BÂY GIỜ MỚI "XÂY TƯỜNG"!
-    // Đặt kích thước cửa sổ bằng số lượng "viên gạch" đã chọn.
     ResizeConsoleWindow(CONSOLE_WIDTH, CONSOLE_HEIGHT);
-    // BƯỚC 3: CÁC THIẾT LẬP KHÁC
-    // Kích hoạt màu 24-bit
     EnableTrueColor();
-    // Khóa kích thước cửa sổ để người dùng không thay đổi được
     FixConsoleWindow();
-    // Hỗ trợ ký tự Unicode (cho các ký tự vẽ vời phức tạp)
-    
     InitConsole(); 
     CenterConsole();
-   
+
+    StartIntro();
 
     while (true) {
         switch (currentState) {
@@ -185,6 +176,7 @@ int main() {
 
                   // --- SETTINGS / LOAD / GUIDE / ABOUT ---
         case SETTINGS:
+            break;
         case LOAD: {
             // Reset dữ liệu tạm trước khi load
             ResetData();
@@ -250,6 +242,7 @@ int main() {
             break;
         }
         case GUIDE:
+            break;
         case ABOUT:
             StartAbout();
             break;
