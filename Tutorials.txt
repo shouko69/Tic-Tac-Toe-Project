@@ -3,5 +3,10 @@
 - System('cls') giờ k xài cái này nx đổi qua ClearScreenWithColor (Hàm này xoá màu nền cũ và thay bằng nền màu theo tham số của nó) và ResetColor(Reset thành màu chữ mặc định của console này chính là cọ vẽ vẽ bàn cờ chữ các thứ).
 - View chỉ để vẽ k được có xử lí input.
 - Graphics.h/.cpp là file để các ảnh vẽ.
+- Hàm main mới :
+*Muốn thêm hàm, chức năng mới :
++ thêm ở enum GameState.
++ Viết hàm mới, khai báo ở control.h/.cpp
++ stateMachine[Tên enum vừa thêm] = [Hàm vừa khai báo];
 
 

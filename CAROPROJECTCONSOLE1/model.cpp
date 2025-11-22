@@ -28,12 +28,10 @@ void ResetData() {
     _X = 0;
     _Y = 0;
 }
-
 void GabageCollect() {
 	// Dọn dẹp tài nguyên nếu có khai báo con trỏ
 }
 //ktra ban co xem co thg nao win khong
-
 // Kiem tra trang thai ban co
 int TestBoard() {
 
@@ -50,7 +48,6 @@ int TestBoard() {
 	}
 
 }
-
 // ham danh dau vao ma tran ban co
 int CheckBoard(int pX, int pY) {
     // 1. Kiểm tra xem index có nằm trong bàn cờ không để tránh lỗi tràn mảng
@@ -71,7 +68,6 @@ int CheckBoard(int pX, int pY) {
 
     return 0; // Ô này đã bị đánh rồi
 }
-
 bool IsFullBoard() {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
@@ -81,7 +77,6 @@ bool IsFullBoard() {
     }
     return true;
 }
-
 // Kiem tra co nguoi thang chua
 bool CheckWin() {
     for (int i = 0; i < BOARD_SIZE; i++) {

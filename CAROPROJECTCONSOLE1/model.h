@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "GameState.h"
-
+// lưu độ dài của các chữ cho chức năng 
 #define MAX_NAME_LEN 21    // <= 20 ký tự + '\0'
 #define MAX_DATE_LEN 20      // "DD-MM-YYYY HH:MM"
 #define MAX_TYPE_LEN 12      // "1 Player" / "2 Players"
@@ -24,7 +24,7 @@ struct GameStateData {
     int cursorY;
     bool loadSuccess;
 
-    // --- THÊM MỚI (PHẦN BẠN ĐANG THIẾU) ---
+    // --- THÊM MỚI---
     char p1Name[MAX_NAME_LEN]; // Tên người chơi 1
     char p2Name[MAX_NAME_LEN]; // Tên người chơi 2
     int p1Score;               // Điểm P1
