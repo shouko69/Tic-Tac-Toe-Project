@@ -23,7 +23,7 @@ int main() {
     FixConsoleWindow();
     InitConsole(); 
     CenterConsole();
-
+    ShowGroupIntro();
     StartIntro();
 
     while (true) {

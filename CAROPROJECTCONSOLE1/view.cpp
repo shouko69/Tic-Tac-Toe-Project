@@ -399,6 +399,41 @@ void ClearScreenWithColor(int r, int g, int b) {
 }
 
 // --- HÀM VẼ (ĐÃ SỬA LỖI) ---
+// --- VẼ MÀN HÌNH GIỚI THIỆU NHÓM (ĐÃ CHỈNH VỊ TRÍ) ---
+void ShowGroupIntro() {
+    ClearScreenWithColor(202, 196, 248);
+    SetColorRGB(100, 0, 150);
+
+    const char* text[] = {
+        " ██████╗ ██████╗  ██████╗ ██╗   ██╗██████╗         ██████╗ ",
+        "██╔════╝ ██╔══██╗██╔═══██╗██║   ██║██╔══██╗       ██╔════╝ ",
+        "██║  ███╗██████╔╝██║   ██║██║   ██║██████╔╝       ███████╗ ",
+        "██║   ██║██╔══██╗██║   ██║██║   ██║██╔═══╝        ██╔═══██╗",
+        "╚██████╔╝██║  ██║╚██████╔╝╚██████╔╝██║            ╚██████╔╝",
+        " ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝             ╚═════╝ "
+    };
+
+    int lines = 6;
+    int textWidth = 67;
+
+    int consoleWidth = GetConsoleWidth();
+
+    // --- CHỈNH SỬA TẠI ĐÂY ---
+    // Bạn hãy thay đổi số 20 này:
+    // Tăng lên (ví dụ 30, 40) để dịch sang PHẢI
+    // Giảm xuống (hoặc số âm) để dịch sang TRÁI
+    int SHIFT_RIGHT = 7;
+
+    int x = (consoleWidth - textWidth) / 2 + SHIFT_RIGHT;
+    int y = 17;
+
+    for (int i = 0; i < lines; i++) {
+        GotoXY(x, y + i);
+        std::cout << text[i];
+    }
+
+    Sleep(2000);
+}
 
 // --- VẼ MÀN HÌNH BẮT ĐẦU (VỚI LOADING BAR) ---
 void StartIntro() {

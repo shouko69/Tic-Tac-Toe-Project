@@ -61,6 +61,7 @@ void DrawMenuItem(int index, bool is_selected);
 void DrawFullNewGameMenu(int selected_index);
 void DrawNewGameMenuItem(int index, bool is_selected);
 void StartAbout();
+void ShowGroupIntro();
 
 // --- Nhóm Nhập Tên (Player Name) ---
 void DrawFullPlayerNameScreen();
