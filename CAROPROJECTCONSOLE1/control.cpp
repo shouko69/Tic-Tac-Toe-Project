@@ -135,10 +135,10 @@ int HandleMainMenuInput() {
         int key = toupper(_getch());
         old_selected = selected;
 
-        if (key == 'W' || (key == 224 && _getch() == 72)) {
+        if (key == 'W') {
             selected = (selected - 1 + TOTAL_ITEMS) % TOTAL_ITEMS;
         }
-        else if (key == 'S' || (key == 224 && _getch() == 80)) {
+        else if (key == 'S') {
             selected = (selected + 1) % TOTAL_ITEMS;
         }
         else if (key == 13) { // Enter
@@ -161,10 +161,10 @@ int HandlePauseMenuInput() {
         int key = toupper(_getch());
         old_selected = selected;
 
-        if (key == 'W' || (key == 224 && _getch() == 72)) {
+        if (key == 'W') {
             selected = (selected - 1 + TOTAL_PAUSE_ITEMS) % TOTAL_PAUSE_ITEMS;
         }
-        else if (key == 'S' || (key == 224 && _getch() == 80)) {
+        else if (key == 'S') {
             selected = (selected + 1) % TOTAL_PAUSE_ITEMS;
         }
         else if (key == 13) { // Enter
@@ -203,7 +203,7 @@ int HandleNewGameMenuInput() {
             if (key == 80) selected = (selected + 1) % TOTAL_NEW_GAME_OPTIONS;
         }
         else if (key == 13) { // Enter
-            if (selected != 0) return selected; // Chặn chọn "1 Player" nếu chưa làm
+            return selected; // Chặn chọn "1 Player" nếu chưa làm
         }
         else if (key == 27) { // ESC
             return ESCAPE_KEY;

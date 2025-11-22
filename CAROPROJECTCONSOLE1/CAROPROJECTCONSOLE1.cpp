@@ -28,15 +28,10 @@ int main() {
 
     while (true) {
         switch (currentState) {
-
-            // --- MENU CHÍNH ---
         case MENU: {
-            int choice = HandleMainMenuInput(); // menu chính vẽ lần đầu bên trong hàm này
-
+            int choice = HandleMainMenuInput();
             switch (choice) {
-            case 0: // PLAY
-                currentState = NEW_GAME_MODE;
-                break;
+            case 0: currentState = NEW_GAME_MODE; break;
             case 1: currentState = LOAD; break;
             case 2: currentState = SETTINGS; break;
             case 3: currentState = GUIDE; break;
@@ -45,21 +40,31 @@ int main() {
             }
             break;
         }
-        case NEW_GAME_MODE: {
-            // Bước 1: Gọi hàm xử lý. Chương trình sẽ "dừng" ở đây
-            // cho đến khi người dùng đưa ra một lựa chọn (Enter hoặc ESC).
+        case NEW_GAME_MODE: {         
             int choice = HandleNewGameMenuInput();
-
-            // Bước 2: Xử lý kết quả mà hàm vừa trả về.
             switch (choice) {
+            case 0:
+                ClearScreenWithColor(89, 79, 175);
+                SetColorRGB(255, 255, 255);
+                GotoXY(65, 22); // Căn chỉnh vị trí cho đẹp
+                std::cout << "==================================";
+                GotoXY(65, 23);
+                std::cout << "    TINH NANG DANG PHAT TRIEN     ";
+                GotoXY(65, 24);
+                std::cout << "          (COMING SOON)           ";
+                GotoXY(65, 25);
+                std::cout << "==================================";
+                GotoXY(65, 28);
+                std::cout << ">> Nhan phim bat ky de quay lai <<";
+                _getch();
+                currentState = MENU;
+                break;
             case 1: // Người dùng chọn "2 PLAYERS"
                 currentState = PLAYER_NAME_INPUT;
                 break;
-
             case 2: // Người dùng chọn "BACK"
                 currentState = MENU;
                 break;
-
             case ESCAPE_KEY: // Người dùng nhấn phím ESC
                 currentState = MENU;
                 break;
@@ -176,6 +181,22 @@ int main() {
 
                   // --- SETTINGS / LOAD / GUIDE / ABOUT ---
         case SETTINGS:
+            // viết tạm vì tính năng này chưa hoàn thành 
+            ClearScreenWithColor(30, 30, 30);
+            SetColorRGB(255, 255, 255); 
+            GotoXY(65, 22); // Căn chỉnh vị trí cho đẹp
+            std::cout << "==================================";
+            GotoXY(65, 23);
+            std::cout << "    TINH NANG DANG PHAT TRIEN     ";
+            GotoXY(65, 24);
+            std::cout << "          (COMING SOON)           ";
+            GotoXY(65, 25);
+            std::cout << "==================================";
+            GotoXY(65, 28);
+            std:: cout << ">> Nhan phim bat ky de quay lai <<";
+            // 3. Đợi phím
+            _getch();
+            currentState = MENU;
             break;
         case LOAD: {
             // Reset dữ liệu tạm trước khi load
