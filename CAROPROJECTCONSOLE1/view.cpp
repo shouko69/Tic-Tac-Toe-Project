@@ -160,16 +160,22 @@ void FixConsoleWindow() {
     SetWindowLong(consoleWindow, GWL_STYLE, style);
 }
 
-void DrawTableCellRGB(const std::string& text, int x, int y, int width, int text_r, int text_g, int text_b, int bg_r, int bg_g, int bg_b) {
-    SetBgRGB(bg_r, bg_g, bg_b);
-    GotoXY(x, y);
-    for (int i = 0; i < width; ++i) {
-        std::cout << " ";
-    }
-    SetColorRGB(text_r, text_g, text_b);
-    GotoXY(x + 1, y);
-    std::cout << text;
+void ClearScreenWithColor(int r, int g, int b) {
+    SetBgRGB(r, g, b);
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD coordScreen = { 0, 0 };
+    DWORD cCharsWritten;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    DWORD dwConSize;
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi)) return;
+    dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
+    FillConsoleOutputCharacter(hConsole, (TCHAR)' ', dwConSize, coordScreen, &cCharsWritten);
+    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    FillConsoleOutputAttribute(hConsole, csbi.wAttributes, dwConSize, coordScreen, &cCharsWritten);
+    SetConsoleCursorPosition(hConsole, coordScreen);
 }
+
+
 
 void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructionTrueColor>& data) {
     if (data.empty()) return;
@@ -204,12 +210,206 @@ void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructio
 }
 
 // ==========================================================================
-// 5. START INTRO (LẤY TỪ VIEW 2 - THEO YÊU CẦU)
+// 5. START INTRO 
 // ==========================================================================
+int CenterXW(std::wstring s) {
+    return (CONSOLE_WIDTH - s.length()) / 2;
+}
+void ShowGroupIntro() {
+    ClearScreenWithColor(202, 196, 248);
+    SetColorRGB(100, 0, 150);
 
+    const char* text[] = {
+        " ██████╗ ██████╗  ██████╗ ██╗   ██╗██████╗         ██████╗ ",
+        "██╔════╝ ██╔══██╗██╔═══██╗██║   ██║██╔══██╗       ██╔════╝ ",
+        "██║  ███╗██████╔╝██║   ██║██║   ██║██████╔╝       ███████╗ ",
+        "██║   ██║██╔══██╗██║   ██║██║   ██║██╔═══╝        ██╔═══██╗",
+        "╚██████╔╝██║  ██║╚██████╔╝╚██████╔╝██║            ╚██████╔╝",
+        " ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝             ╚═════╝ "
+    };
+
+    int lines = 6;
+    int textWidth = 67;
+
+   
+
+    // --- CHỈNH SỬA TẠI ĐÂY ---
+    // Bạn hãy thay đổi số 20 này:
+    // Tăng lên (ví dụ 30, 40) để dịch sang PHẢI
+    // Giảm xuống (hoặc số âm) để dịch sang TRÁI
+    int SHIFT_RIGHT = 7;
+
+    int x = (CONSOLE_WIDTH - textWidth) / 2 + SHIFT_RIGHT;
+    int y = 17;
+
+    for (int i = 0; i < lines; i++) {
+        GotoXY(x, y + i);
+        std::cout << text[i];
+    }
+
+    Sleep(2000);
+}
+void StartIntro() {
+    // Xóa màn hình ở chế độ thường trước
+    ClearScreenWithColor(202, 196, 248);
+
+    // === BẮT ĐẦU CHẾ ĐỘ UNICODE (VÙNG CẤM DÙNG COUT) ===
+    _setmode(_fileno(stdout), _O_U16TEXT);
+
+    // Set màu nền Lavender & Chữ Tím (Dùng hàm W)
+    SetBgW(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B);
+    SetColorW(LOGO_R, LOGO_G, LOGO_B);
+
+    // Vẽ Logo
+    int logoY = 5;
+    std::wstring logo[] = {
+        L"████████╗██╗  ██╗███████╗    ██████╗  █████╗ ██████╗  ██████╗      ██████╗  █████╗ ███╗   ███╗███████╗",
+        L"╚══██╔══╝██║  ██║██╔════╝   ██╔════╝ ██╔══██╗██╔══██╗██╔═══██╗    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝",
+        L"   ██║   ███████║█████╗     ██║      ███████║██████╔╝██║   ██║    ██║  ███╗███████║██╔████╔██║█████╗  ",
+        L"   ██║   ██╔══██║██╔══╝     ██║      ██╔══██║██╔══██╗██║   ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ",
+        L"   ██║   ██║  ██║███████╗   ╚██████╗ ██║  ██║██║  ██║╚██████╔╝    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗",
+        L"   ╚═╝   ╚═╝  ╚═╝╚══════╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝"
+    };
+
+    for (int i = 0; i < 6; i++) {
+        GotoXY(CenterXW(logo[i]), logoY + i);
+        std::wcout << logo[i];
+    }
+
+    // Loading Bar
+    int barWidth = 60;
+    int barY = 20;
+    int barX = (CONSOLE_WIDTH - barWidth) / 2;
+
+    SetColorW(80, 80, 80); // Dùng hàm W
+    GotoXY(barX - 1, barY - 1); std::wcout << L"╔" << std::wstring(barWidth, L'═') << L"╗";
+    GotoXY(barX - 1, barY);     std::wcout << L"║";
+    GotoXY(barX + barWidth, barY); std::wcout << L"║";
+    GotoXY(barX - 1, barY + 1); std::wcout << L"╚" << std::wstring(barWidth, L'═') << L"╝";
+
+    GotoXY(CenterXW(L"LOADING..."), barY - 2);
+    std::wcout << L"LOADING...";
+
+    for (int i = 0; i <= barWidth; ++i) {
+        int percent = (i * 100) / barWidth;
+
+        GotoXY(barX + i, barY);
+        if (i < barWidth) {
+            SetColorW(100, 100, 255); // Xanh dương (Dùng hàm W)
+            std::wcout << L"█";
+        }
+
+        // Nếu muốn reset màu ở đây thì phải dùng ResetColorW()
+        // Nhưng ở đây ta set đè màu luôn nên k cần reset
+        SetBgW(202, 196, 248); SetColorW(80, 80, 80);
+
+        std::wstring perStr = std::to_wstring(percent) + L"%";
+        GotoXY(CenterXW(perStr), barY + 2);
+        std::wcout << perStr;
+
+        if (i < 20) std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        else if (i < 50) std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        else std::this_thread::sleep_for(std::chrono::milliseconds(30));
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+    while (_kbhit()) {
+        _getch(); // Đọc và vứt hết các phím thừa đi
+    }
+    // Press Any Key
+    GotoXY(0, barY - 2); std::wcout << std::wstring(120, L' ');
+    GotoXY(0, barY + 2); std::wcout << std::wstring(120, L' ');
+
+    std::wstring prompt = L">> PRESS ANY KEY TO START <<";
+    int promptX = CenterXW(prompt);
+    bool showText = true;
+
+    while (true) {
+        if (_kbhit()) { _getch(); break; }
+
+        if (showText) {
+            SetColorW(255, 50, 50); // Đỏ (Dùng hàm W)
+            GotoXY(promptX, barY + 2);
+            std::wcout << prompt;
+        }
+        else {
+            GotoXY(promptX, barY + 2);
+            std::wcout << std::wstring(prompt.length(), L' ');
+        }
+        showText = !showText;
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    // === KẾT THÚC CHẾ ĐỘ UNICODE ===
+    // Trả về chế độ thường ngay lập tức
+    _setmode(_fileno(stdout), _O_TEXT);
+
+    // Giờ đã về Text mode -> Dùng ResetColor cũ thoải mái
+    ResetColor();
+    ClearScreenWithColor(0, 0, 0);
+}
 // ==========================================================================
 // 6. MENU & GAME FLOW (LẤY TỪ VIEW 1)
 // ==========================================================================
+void StartAbout() {
+    SetColorRGB(255, 255, 255);
+    ClearScreenWithColor(0, 0, 0);
+    int i = 55, offset = 1;
+    GabageCollect(); 
+
+    // ✅ 1. Chuyển sang UTF16 để in Unicode (phải trước cout/wcout)
+    _setmode(_fileno(stdout), _O_U16TEXT);
+
+    GotoXY(i, 1);
+    wcout << L" █████╗ ██████╗  ██████╗ ██╗   ██╗████████╗\n"; GotoXY(i, 2);
+    wcout << L"██╔══██╗██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝\n"; GotoXY(i, 3);
+    wcout << L"███████║██████╔╝██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 4);
+    wcout << L"██╔══██║██╔══██╗██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 5);
+    wcout << L"██║  ██║██████╔╝╚██████╔╝╚██████╔╝   ██║   \n"; GotoXY(i, 6);
+    wcout << L"╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   \n";
+
+    COORD tableCoord{ 40, 10 };
+    i = 0;
+    GotoXY(tableCoord.X + 5, tableCoord.Y);
+    wcout << L"Welcome to the Gomoku Game - made by team 6 - 25CTT3 - HCMUS\n";
+
+    i += 2;
+    GotoXY(tableCoord.X, tableCoord.Y + i);
+    wcout << L"25120215 - Nguyễn Minh Nhật \t\t PvE Mode - Game Content\n";
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    wcout << L"25120215 - Nguyễn Hoàng Huy\t\t Game Interface Design\n";
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    wcout << L"25120215 - Vũ Thanh Phong\t\t Game Graphic Design - Game Flow Design\n";
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    wcout << L"25120215 - Đỗ Lê Nhật Quang\t\t Game Interface Design - Game Sound\n";
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    wcout << L"25120215 - Nguyễn Phú Quang\t\t Load & Save Game\n";
+    i += offset;
+    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
+    wcout << L"25120215 - Nguyễn Vũ Nhật Quang\t\t Game Graphic Design\n";
+
+    // ✅ 3. Vòng chờ phím bấm
+    while (true) {
+        if (_kbhit()) {
+            int key = _getch();
+            if (key == 27 || key == 13) break; // ESC hoặc Enter
+        }
+        Sleep(50);
+    }
+
+    // ✅ 4. Trả chế độ xuất về bình thường (O_TEXT)
+    _setmode(_fileno(stdout), _O_TEXT);
+
+    // ✅ 5. Không cần _getch() nữa (vì trên đã chờ phím)
+    ClearScreenWithColor(0, 0, 0);
+    ResetColor();
+    // SceneHandle("MAIN MENU"); 
+    currentState = MENU;
+}
 
 void DrawFancyBox(int x, int y, int width, std::string text, bool isSelected) {
     // 1. Thiết lập màu nền chung
@@ -325,6 +525,7 @@ void DrawFullNewGameMenu(int selected_index) {
 
 
     // 3. Vẽ tất cả các mục menu
+    SetColorRGB(255, 100, 180);
     for (int i = 0; i < TOTAL_NEW_GAME_OPTIONS; ++i) {
         DrawNewGameMenuItem(i, (i == selected_index));
     }
@@ -338,7 +539,7 @@ void DrawFullNewGameMenu(int selected_index) {
  * Chức năng: Vẽ toàn bộ màn hình nhập tên LẦN ĐẦU TIÊN.
  * Hàm này có ClearScreen và chỉ được gọi một lần.
  */
-void DrawFullPlayerNameScreen() {
+void DrawFull2PlayerNameScreen() {
     ClearScreenWithColor(89, 79, 175);
     SetColorRGB(255, 100, 180);
     int i = 50;
@@ -605,7 +806,7 @@ void StartAbout() {
  * Chức năng: CHỈ CẬP NHẬT các phần động của màn hình (tên, con trỏ, nút BACK).
  * Hàm này KHÔNG có ClearScreen, không gây nhấp nháy.
  */
-void UpdatePlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer) {
+void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer) {
     // activeControl: 0=P1_Typing, 1=P2_Typing, 2=Global_Back_Button
 
     // Xóa vùng tên cũ để cập nhật
@@ -647,8 +848,8 @@ void DrawBoard(int pSize) {
         for (int i = 0; i <= pSize; i++) {
 
             // 1. Dùng biến toàn cục từ view.h để tính tọa độ
-            int x = LEFT + CELL_VISUAL_WIDTH * i;   // Thay CELL_WIDTH bằng CELL_VISUAL_WIDTH
-            int y = TOP + CELL_VISUAL_HEIGHT * j;   // Thay CELL_HEIGHT bằng CELL_VISUAL_HEIGHT
+            int x = LEFT + CELL_VISUAL_WIDTH * i;   
+            int y = TOP + CELL_VISUAL_HEIGHT * j;  
             GotoXY(x, y);
 
             // 2. Vẽ các giao điểm (Giữ nguyên logic)
@@ -827,8 +1028,8 @@ void DrawGameOverScreen(int selectedOption, bool drawAll) {
 
     // Tọa độ vẽ ASCII ART (X cách xa khung ra một chút)
     const int ART_Y = BOX_Y + 4;
-    const int P1_ART_X = BOX_X - 42;      // Bên trái
-    const int P2_ART_X = BOX_X + BOX_WIDTH + 2; // Bên phải
+    const int P1_ART_X = BOX_X - 50;      // Bên trái
+    const int P2_ART_X = BOX_X + BOX_WIDTH + 10; // Bên phải
 
     // =============================================================
     // A. VẼ NỀN, TIÊU ĐỀ, KHUNG & ART (CHỈ CHẠY 1 LẦN)

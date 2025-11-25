@@ -43,39 +43,43 @@ struct DrawInstructionTrueColor {
 // ==========================================================================
 
 // --- Nhóm Hệ Thống (System & Utils) ---
-bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY);
+bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY); /*fontName: Đặt tên font muốn dùng (ví dụ: L"Consolas", L"Terminal"...), sizeX, sizeY: 
+Đặt chiều rộng và chiều cao(pixel) cho một ký tự.*/
+
+
 void ResizeConsoleWindow(int width, int height);
-void FixConsoleWindow();
-void CenterConsole();
-int CenterX(const std::string& text);
+void FixConsoleWindow(); 
+void CenterConsole(); // canh giữa console
+int CenterX(const std::string& text); // canh giữa chữ
+int CenterXW(std::wstring s); // canh giữa chữ phiên bản khi kích hoạt chế độ unicode (k dùng cout !!!!), khi vô chế độ này thì phải xài các hàm sử dụng wcout hết !!!!!!!
 void GotoXY(int x, int y);
-void ClearScreenWithColor(int r, int g, int b);
-void DrawTableCellRGB(const std::string& text, int x, int y, int width, int text_r, int text_g, int text_b, int bg_r, int bg_g, int bg_b);
-void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructionTrueColor>& data);
+void ClearScreenWithColor(int r, int g, int b); // Hàm này bây giờ thay thế System('cls') nó sẽ dọn dẹp màn hình nhưng sẽ chuyển màu nền về màu theo tham số đã truyền !!!!
+void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructionTrueColor>& data); // kỹ thuật sử dụng để đưa ảnh pixel vô console 
 
 // --- Nhóm Intro & Menu ---
+void ShowGroupIntro(); // Intro Group6
 void StartIntro(); // Intro có Loading bar
 void DrawFancyBox(int x, int y, int width, std::string text, bool isSelected);
-void DrawFullMenu(int selected_index);
-void DrawMenuItem(int index, bool is_selected);
-void DrawFullNewGameMenu(int selected_index);
-void DrawNewGameMenuItem(int index, bool is_selected);
+void DrawFullMenu(int selected_index); // vẽ tất cả những j có ở menu chính
+void DrawMenuItem(int index, bool is_selected); // vẽ các nút chọn chức năng menu
+void DrawFullNewGameMenu(int selected_index); // vẽ tất cả những j có ở menu mode khi bấm play
+void DrawNewGameMenuItem(int index, bool is_selected); // vẽ các nút chọn chức năng của mode 
 void StartAbout();
 void ShowGroupIntro();
 
 // --- Nhóm Nhập Tên (Player Name) ---
-void DrawFullPlayerNameScreen();
-void UpdatePlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer);
+void DrawFull2PlayerNameScreen(); // vẽ tiêu đề 2 PLAYERS, khung chọn tên
+void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer); // hàm hiển thị khi nhập tên 
 
 // --- Nhóm In-Game (Bàn cờ & UI chơi) ---
 void DrawBoard(int pSize);
 void RedrawBoardState(); // Vẽ lại X/O trên bàn cờ
-void GotoBoard(int pX, int pY); // Nhảy đến tâm ô cờ
-void DrawGameUI(); // Vẽ toàn bộ giao diện game (Nền, Bàn cờ, UI tĩnh, UI động)
+void GotoBoard(int pX, int pY); // Nhảy đến tâm ô cờ để đặt con trỏ
+void DrawGameUI(); // Vẽ toàn bộ giao diện trong game (Nền, Bàn cờ, UI tĩnh, UI động)
 void DrawStatic2P_UI(); // Vẽ khung tên, điểm (Chạy 1 lần)
 void UpdateDynamic2P_UI(); // Cập nhật điểm số, lượt đi (Chạy liên tục)
 
 // --- Nhóm Pause & Kết thúc ---
-void DrawFullPauseMenu(int selected_index);
-void DrawPauseMenuItem(int index, bool is_selected);
-void DrawGameOverScreen(int selectedOption, bool drawAll); // Màn hình kết quả xịn
+void DrawFullPauseMenu(int selected_index); // vẽ tất cả những j có trên màn hình pause
+void DrawPauseMenuItem(int index, bool is_selected); // các lựa chọn của menu pause
+void DrawGameOverScreen(int selectedOption, bool drawAll); // Màn hình hiển thị kết quả
