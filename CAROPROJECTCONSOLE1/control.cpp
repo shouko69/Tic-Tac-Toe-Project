@@ -444,12 +444,10 @@ void RunSettingsPState() {
     currentState = PAUSE;
 }
 void RunGuideState() {
-    ShowComingSoonPopup(); // Tạm thời chưa có gì thì hiện cái này
-    currentState = MENU;
+    StartGuide();
 }
 void RunAboutState() {
     StartAbout();
-    // StartAbout của bạn tự xử lý vòng lặp và đổi state nên không cần làm gì thêm
 }
 void RunLoadState() {
     ResetData();
