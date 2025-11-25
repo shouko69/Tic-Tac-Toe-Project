@@ -84,7 +84,7 @@ void ExitGame() {
 }
 
 // 3. ĐIỀU KHIỂN DI CHUYỂN 
-=
+
 void MoveRight() {
     if (_X < BOARD_SIZE - 1) {
         _X++;
