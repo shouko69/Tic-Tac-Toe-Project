@@ -71,12 +71,12 @@ const std::vector<std::string> WIN_ART = {
 };
 // 2. LOSE ART (Đã chuyển sang vector)
 const std::vector<std::string> LOSE_ART = {
-    "██╗       ██████╗ ███████╗███████╗",
-    "██║      ██╔═══██╗██╔════╝██╔════╝",
-    "██║      ██║   ██║███████╗█████╗  ",
-    "██║      ██║   ██║╚════██║██╔══╝  ",
-    "███████╗ ╚██████╔╝███████║███████╗ ",
-    "╚══════╝  ╚═════╝ ╚══════╝╚══════╝ "
+    "██╗      ██████╗ ███████╗███████╗",
+    "██║     ██╔═══██╗██╔════╝██╔════╝",
+    "██║     ██║   ██║███████╗█████╗  ",
+    "██║     ██║   ██║╚════██║██╔══╝  ",
+    "███████╗╚██████╔╝███████║███████╗ ",
+    "╚══════╝ ╚═════╝ ╚══════╝╚══════╝ "
 };
 // 3. X ART (Giữ nguyên vector)
 const std::vector<std::string> ART_X_BIG = {
@@ -104,6 +104,69 @@ struct ColorTemp {
     bool operator==(const ColorTemp& o) const { return r == o.r && g == o.g && b == o.b; }
 };
 
+
+// mnhat (branch Phong4)
+void DrawFrame(int x, int y, int width, int height) {
+    // Số ký tự ngang để lặp (trừ 2 ký tự góc)
+    int inner_width = width - 2;
+    // Vẽ viền trên
+    GotoXY(x, y);
+    std::wcout << L"╔";
+    for (int i = 0; i < inner_width; ++i) {
+        std::wcout << L"═";
+    }
+    std::wcout << L"╗";
+    // Vẽ viền dọc
+    for (int i = 1; i < height - 1; ++i) {
+        // Bên trái
+        GotoXY(x, y + i);
+        std::wcout << L"║";
+        // Bên phải
+        GotoXY(x + width - 1, y + i);
+        std::wcout << L"║";
+    }
+    // Vẽ viền dưới
+    GotoXY(x, y + height - 1);
+    std::wcout << L"╚";
+    for (int i = 0; i < inner_width; ++i) {
+        std::wcout << L"═";
+    }
+    std::wcout << L"╝";
+}
+void DrawFrame1(int x, int y, int width, int height) {
+    // Số ký tự ngang để lặp (trừ 2 ký tự góc)
+    int inner_width = width - 2;
+    // Vẽ viền trên
+    GotoXY(x, y);
+    std::wcout << L"┌";
+    for (int i = 0; i < inner_width; ++i) {
+        std::wcout << L"─";
+    }
+    std::wcout << L"┐";
+    // Vẽ viền dọc
+    for (int i = 1; i < height - 1; ++i) {
+        // Bên trái
+        GotoXY(x, y + i);
+        std::wcout << L"│";
+        // Bên phải
+        GotoXY(x + width - 1, y + i);
+        std::wcout << L"│";
+    }
+    // Vẽ viền dưới
+    GotoXY(x, y + height - 1);
+    std::wcout << L"└";
+    for (int i = 0; i < inner_width; ++i) {
+        std::wcout << L"─";
+    }
+    std::wcout << L"┘";
+}
+// Vẽ vạch ngang
+void horizontalLine(int X, int Y, int width, int height) {
+    for (int i = 0; i < width; i++) {
+        GotoXY(X + i, Y + height);
+        std::wcout << L"─";
+    }
+}
 // ==========================================================================
 // 4. SYSTEM & HELPER FUNCTIONS
 // ==========================================================================
@@ -355,47 +418,54 @@ void StartIntro() {
 // 6. MENU & GAME FLOW (LẤY TỪ VIEW 1)
 // ==========================================================================
 void StartAbout() {
-    SetColorRGB(255, 255, 255);
-    ClearScreenWithColor(0, 0, 0);
-    int i = 55, offset = 1;
     GabageCollect(); 
-
-    // ✅ 1. Chuyển sang UTF16 để in Unicode (phải trước cout/wcout)
+    ClearScreenWithColor(202, 196, 248);
     _setmode(_fileno(stdout), _O_U16TEXT);
+    // Set màu nền Lavender & Chữ Tím (Dùng hàm W)
+    SetBgW(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B);
+    SetColorW(LOGO_R, LOGO_G, LOGO_B);
+    DrawFrame(2, 1, 162, 53);
+    int aboutLogoY = 5;
+    std::wstring aboutLogo[] = {
+        L" █████╗ ██████╗  ██████╗ ██╗   ██╗████████╗",
+        L"██╔══██╗██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝",
+        L"███████║██████╔╝██║   ██║██║   ██║   ██║   ",
+        L"██╔══██║██╔══██╗██║   ██║██║   ██║   ██║   ",
+        L"██║  ██║██████╔╝╚██████╔╝╚██████╔╝   ██║   ",
+        L"╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   "
+    };
 
-    GotoXY(i, 1);
-    wcout << L" █████╗ ██████╗  ██████╗ ██╗   ██╗████████╗\n"; GotoXY(i, 2);
-    wcout << L"██╔══██╗██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝\n"; GotoXY(i, 3);
-    wcout << L"███████║██████╔╝██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 4);
-    wcout << L"██╔══██║██╔══██╗██║   ██║██║   ██║   ██║   \n"; GotoXY(i, 5);
-    wcout << L"██║  ██║██████╔╝╚██████╔╝╚██████╔╝   ██║   \n"; GotoXY(i, 6);
-    wcout << L"╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   \n";
+    for (int i = 0; i < 6; i++) {
+        GotoXY(CenterXW(aboutLogo[i]), aboutLogoY + i);
+        std::wcout << aboutLogo[i];
+    }
 
     COORD tableCoord{ 40, 10 };
-    i = 0;
+    int i = 0, offset = 2;
     GotoXY(tableCoord.X + 5, tableCoord.Y);
-    wcout << L"Welcome to the Gomoku Game - made by team 6 - 25CTT3 - HCMUS\n";
 
-    i += 2;
-    GotoXY(tableCoord.X, tableCoord.Y + i);
-    wcout << L"25120215 - Nguyễn Minh Nhật \t\t PvE Mode - Game Content\n";
-    i += offset;
-    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Nguyễn Hoàng Huy\t\t Game Interface Design\n";
-    i += offset;
-    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Vũ Thanh Phong\t\t Game Graphic Design - Game Flow Design\n";
-    i += offset;
-    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Đỗ Lê Nhật Quang\t\t Game Interface Design - Game Sound\n";
-    i += offset;
-    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Nguyễn Phú Quang\t\t Load & Save Game\n";
-    i += offset;
-    GotoXY(tableCoord.X, tableCoord.Y + i + 2);
-    wcout << L"25120215 - Nguyễn Vũ Nhật Quang\t\t Game Graphic Design\n";
-
-    // ✅ 3. Vòng chờ phím bấm
+    int inforLogoY = 20;
+    std::wstring inforLogo[] = {
+        L"Welcome to the Gomoku Game - made by team 6 - 25CTT3 - HCMUS",
+        L"25120215 - Nguyen Minh Nhat\t\t PvE Mode - Game Content",
+        L"25120193 - Nguyen Hoang Huy\t \t Game Interface Design",
+        L"25120219 - Vu Thanh Phong \t\t\t Game Graphic Design - Game Flow Design",
+        L"25120223 - Do Le Nhat Quang \t \t Game Interface Design - Game Sound",
+        L"25120224 - Nguyen Phu Quang\ \t \t Load & Save Game",
+        L"25120225 - Nguyen Vu Nhat Quang\t \t Game Graphic Design"
+    };
+    for (int i = 0; i < 7; i++) {
+        if (i == 0) {
+            GotoXY(tableCoord.X + 10, tableCoord.Y + 3);
+            std::wcout << inforLogo[i];
+        }
+        else {
+            GotoXY(45, inforLogoY + i * offset);
+            std::wcout << inforLogo[i];
+        } 
+    }
+    _setmode(_fileno(stdout), _O_TEXT);
+    // Vòng chờ phím bấm
     while (true) {
         if (_kbhit()) {
             int key = _getch();
@@ -404,16 +474,105 @@ void StartAbout() {
         Sleep(50);
     }
 
-    // ✅ 4. Trả chế độ xuất về bình thường (O_TEXT)
+    // Trả chế độ xuất về bình thường (O_TEXT)
     _setmode(_fileno(stdout), _O_TEXT);
 
-    // ✅ 5. Không cần _getch() nữa (vì trên đã chờ phím)
+    // Không cần _getch() nữa (vì trên đã chờ phím)
     ClearScreenWithColor(0, 0, 0);
     ResetColor();
     // SceneHandle("MAIN MENU"); 
     currentState = MENU;
 }
+void StartGuide() {
+    GabageCollect();
+    ClearScreenWithColor(202, 196, 248);
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    // Set màu nền Lavender & Chữ Tím (Dùng hàm W)
+    SetBgW(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B);
+    SetColorW(LOGO_R, LOGO_G, LOGO_B);
+    DrawFrame(2, 1, 162, 53);
+    int X = 26, Y = 15;
+    DrawFrame1(X - 1, Y - 1, 117, 32);
+    int guideLogoY = 5;
+    std::wstring guideLogo[] = {
+        L" ██████╗ ██╗   ██╗██╗██████╗ ███████╗",
+        L"██╔════╝ ██║   ██║██║██╔══██╗██╔════╝",
+        L"██║  ███╗██║   ██║██║██║  ██║███████╗",
+        L"██║   ██║██║   ██║██║██║  ██║██╔════╝",
+        L"╚██████╔╝╚██████╔╝██║██████╔╝███████╗",
+        L" ╚═════╝  ╚═════╝ ╚═╝╚═════╝ ╚══════╝"
+    };
+    for (int i = 0; i < 6; i++) {
+        GotoXY(CenterXW(guideLogo[i]), guideLogoY + i);
+        std::wcout << guideLogo[i];
+    }
+    GotoXY(X + 38, Y + 1);
+    std::wcout << L"Game features and in-game operations: ";
+    // Vẽ vạch ngang
+    horizontalLine(X, Y, 115, 3);
+    std::wstring Player1Guide[] = {
+        L"Player 1 Movement: ",
+        L"\t'W': Go up",
+        L"\t'S': Go down",
+        L"\t'A': Go left",
+        L"\t'D': Go right",
+        L"\t'F': Mark"
+    };
+    for (int i = 0; i < 6; i++) {
+        GotoXY(X + 5, Y + i*2 + 4);
+        std::wcout << Player1Guide[i];
+    }
+    std::wstring Player2Guide[] = {
+        L"Player 2 Movement: ",
+        L"\t'↑': Go up",
+        L"\t'↓': Go down",
+        L"\t'←': Go left",
+        L"\t'→': Go right",
+        L"\t'Enter': Mark"
+    };
+    for (int i = 0; i < 6; i++) {
+        GotoXY(X + 65, Y + i*2 + 4);
+        std::wcout << Player2Guide[i];
+    }
+    // Vẽ vạch ngăn cách
+    for (int i = 0; i < 13; i++) {
+        GotoXY(81, Y + i + 4);
+        std::wcout << L"│";
+    }
+    horizontalLine(X, Y, 115, 17);
+    GotoXY(X + 38, Y + 19);
+    std::wcout << L"Caro Game Rules Summary : ";
+    horizontalLine(X, Y, 115, 21);
+    std::wstring guideRule[] = {
+        L"Caro is the game using the X and O symbols to represent players and followed by a set of rules: ",
+        L"",
+        L"1. Players take turns placing their marks(X or O) on empty intersections.",
+        L"2. \"X\" always plays first, followed by \"O\" player.",
+        L"3. The first player to score five points in a row horizontally, vertically, or diagonally wins the game.",
+        L"4. If the board is completely filled and no player has five in a row, the game ends in a draw."
+    };
+    for (int i = 0; i < 6; i++) {
+        GotoXY(X + 5, Y + i + 23);
+        std::wcout << guideRule[i];
+    }
+    // Trả chế độ xuất về bình thường (O_TEXT)
+    _setmode(_fileno(stdout), _O_TEXT);
 
+    // Vòng chờ phím bấm
+    while (true) {
+        if (_kbhit()) {
+            int key = _getch();
+            if (key == 27 || key == 13) break; // ESC hoặc Enter
+        }
+        Sleep(50);
+    }
+
+    // Không cần _getch() nữa (vì trên đã chờ phím)
+    ClearScreenWithColor(0, 0, 0);
+    ResetColor();
+    // SceneHandle("MAIN MENU"); 
+    currentState = MENU;
+}
 void DrawFancyBox(int x, int y, int width, std::string text, bool isSelected) {
     // 1. Thiết lập màu nền chung
     SetBgRGB(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B); // Nền hộp
@@ -486,17 +645,24 @@ void DrawFullMenu(int selected_index) {
     GotoXY(i, 1);
     SetColorRGB(LOGO_R, LOGO_G, LOGO_B);
 
-    // XÓA BỎ: _setmode(_fileno(stdout), _O_U16TEXT);
+    // === BẮT ĐẦU CHẾ ĐỘ UNICODE (VÙNG CẤM DÙNG COUT) ===
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    int logoY = 5;
+    std::wstring logo[] = {
+        L"████████╗██╗  ██╗███████╗    ██████╗  █████╗ ██████╗  ██████╗      ██████╗  █████╗ ███╗   ███╗███████╗",
+        L"╚══██╔══╝██║  ██║██╔════╝   ██╔════╝ ██╔══██╗██╔══██╗██╔═══██╗    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝",
+        L"   ██║   ███████║█████╗     ██║      ███████║██████╔╝██║   ██║    ██║  ███╗███████║██╔████╔██║█████╗  ",
+        L"   ██║   ██╔══██║██╔══╝     ██║      ██╔══██║██╔══██╗██║   ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ",
+        L"   ██║   ██║  ██║███████╗   ╚██████╗ ██║  ██║██║  ██║╚██████╔╝    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗",
+        L"   ╚═╝   ╚═╝  ╚═╝╚══════╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝"
+    };
 
-    // SỬA LẠI: Dùng std::cout
-    std::cout << "████████╗██╗  ██╗███████╗       █████╗  █████╗ ██████╗  ██████╗     ██████╗  █████╗ ███╗   ███╗███████╗\n"; GotoXY(i, 2);
-    std::cout << "╚══██╔══╝██║  ██║██╔════╝     ██╔════╝██╔══██╗██╔══██╗██╔═══██╗    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝\n"; GotoXY(i, 3);
-    std::cout << "   ██║   ███████║█████╗       ██║     ███████║██████╔╝██║   ██║    ██║  ███╗███████║██╔████╔██║█████╗  \n"; GotoXY(i, 4);
-    std::cout << "   ██║   ██╔══██║██╔══╝       ██║     ██╔══██║██╔══██╗██║   ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  \n"; GotoXY(i, 5);
-    std::cout << "   ██║   ██║  ██║███████╗     ╚██████╗██║  ██║██║  ██║╚██████╔╝    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗\n"; GotoXY(i, 6);
-    std::cout << "   ╚═╝   ╚═╝  ╚═╝╚══════╝      ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝\n";
-
+    for (int i = 0; i < 6; i++) {
+        GotoXY(CenterXW(logo[i]), logoY + i);
+        std::wcout << logo[i];
+    }
     // XÓA BỎ: _setmode(_fileno(stdout), _O_TEXT);
+    _setmode(_fileno(stdout), _O_TEXT);
     SetBgRGB(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B); // Nền hướng dẫn
     SetColorRGB(TEXT_NORMAL_R, TEXT_NORMAL_G, TEXT_NORMAL_B);
 
@@ -964,13 +1130,13 @@ void DrawFullPauseMenu(int selected_index) {
     // 1. Đặt màu nền tím và xóa màn hình
     ClearScreenWithColor(255, 255, 255);
 
-    // --- 2. VẼ TIÊU ĐỀ (Đã bỏ khung) ---
+    // 2. VẼ TIÊU ĐỀ (Đã bỏ khung) ---
     const std::string title = "GAME PAUSED";
     SetColorRGB(0, 0, 0); // Chữ tiêu đề màu trắng
     GotoXY(CenterX(title), 4);
     std::cout << title;
 
-    // --- 3. VẼ DANH SÁCH MENU ---
+    // 3. VẼ DANH SÁCH MENU ---
     for (int i = 0; i < TOTAL_PAUSE_ITEMS; i++) {
         DrawPauseMenuItem(i, i == selected_index); // Gọi hàm TrueColor mới
     }

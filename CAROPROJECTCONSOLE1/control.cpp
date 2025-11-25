@@ -439,7 +439,8 @@ void RunSettingsState() {
     currentState = MENU;
 }
 void RunGuideState() {
-    ShowComingSoonPopup(); // Tạm thời chưa có gì thì hiện cái này
+    //ShowComingSoonPopup(); // Tạm thời chưa có gì thì hiện cái này
+    StartGuide();
     currentState = MENU;
 }
 void RunAboutState() {

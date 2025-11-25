@@ -65,12 +65,16 @@ void DrawMenuItem(int index, bool is_selected); // vẽ các nút chọn chức 
 void DrawFullNewGameMenu(int selected_index); // vẽ tất cả những j có ở menu mode khi bấm play
 void DrawNewGameMenuItem(int index, bool is_selected); // vẽ các nút chọn chức năng của mode 
 void StartAbout();
+void StartGuide();
 
 // --- Nhóm Nhập Tên (Player Name) ---
 void DrawFull2PlayerNameScreen(); // vẽ tiêu đề 2 PLAYERS, khung chọn tên
 void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer); // hàm hiển thị khi nhập tên 
 
 // --- Nhóm In-Game (Bàn cờ & UI chơi) ---
+void DrawFrame(int x, int y, int width, int height); // Vẽ Khung tùy ý
+void DrawFrame1(int x, int y, int width, int height);
+void horizontalLine(int X, int Y, int width, int height); // Vẽ ngang
 void DrawBoard(int pSize);
 void RedrawBoardState(); // Vẽ lại X/O trên bàn cờ
 void GotoBoard(int pX, int pY); // Nhảy đến tâm ô cờ để đặt con trỏ
