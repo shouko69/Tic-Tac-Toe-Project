@@ -634,7 +634,7 @@ void DrawMenuItem(int index, bool is_selected) {
 }
 
 void DrawFullMenu(int selected_index) {
-    ClearScreenWithColor(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B); // "Sơn" nền Lavender
+    ClearScreenWithColor(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B);
 
     int i = 33;
     GotoXY(i, 1);
@@ -651,15 +651,15 @@ void DrawFullMenu(int selected_index) {
     std::cout << "   ╚═╝   ╚═╝  ╚═╝╚══════╝      ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝\n";
 
     
-    SetBgRGB(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B); // Nền hướng dẫn
+    SetBgRGB(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B); 
     SetColorRGB(TEXT_NORMAL_R, TEXT_NORMAL_G, TEXT_NORMAL_B);
 
     for (int i = 0; i < TOTAL_ITEMS; i++) {
         DrawMenuItem(i, i == selected_index);
     }
 
-    const char* guide = "'W': Move up, 'S': Move down,  'Enter': Select,  'ESC': Resume";
-    GotoXY(CenterX(guide), PAUSE_START_Y + TOTAL_PAUSE_ITEMS * 2 + 3);
+    const char* guide = "'W': Move up, 'S': Move down,  'Enter': Select";
+    GotoXY(CenterX(guide), 50);
     std::cout << guide;
 }
 
@@ -691,7 +691,7 @@ void DrawFullNewGameMenu(int selected_index) {
         DrawNewGameMenuItem(i, (i == selected_index));
     }
     
-    const char* guide = "'W': Move up, 'S': Move down,  'Enter': Select,  'ESC': Resume";
+    const char* guide = "'W': Move up, 'S': Move down,  'Enter': Select,  'ESC': quit";
     GotoXY(CenterX(guide), 50);
     std::cout << guide;
 }
