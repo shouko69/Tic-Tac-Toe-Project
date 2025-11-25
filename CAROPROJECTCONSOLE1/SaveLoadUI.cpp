@@ -23,9 +23,9 @@
 #include <iomanip>
 #include <cstring>
 
- // =================================================================================
+ 
  // 1. CÁC HẰNG SỐ CẤU HÌNH GIAO DIỆN
- // =================================================================================
+ 
 
  // Khai báo lại các hằng số chiều rộng cột để các hàm có thể sử dụng
 const int COL_WIDTH_NAME = 25;
@@ -43,17 +43,17 @@ void DrawTableFrame(int startX, int startY, int totalContentRows, int nameWidth,
 void PerformSave(const std::string& filename);
 
 
-// =================================================================================
+
 // 3. CÁC HÀM GIAO DIỆN CHÍNH
-// =================================================================================
+
 
 /**
- * @brief Hiển thị màn hình Tải Game với danh sách cuộn 3 slot.
- * @return true nếu người dùng chọn tải, false nếu chọn BACK.
+ *  Hiển thị màn hình Tải Game với danh sách cuộn 3 slot.
+ *return true nếu người dùng chọn tải, false nếu chọn BACK.
  */
 bool ShowLoadGameScreen() {
     std::vector<GameStateData> saves;
-    // ... (Phần code tải file của bạn giữ nguyên) ...
+    
     std::string searchPath = SAVE_DIR + "*.txt";
     WIN32_FIND_DATAA findData;
     HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
@@ -138,7 +138,7 @@ bool ShowLoadGameScreen() {
             }
         }
 
-        // ... (Phần code vẽ nút BACK và xử lý input của bạn giữ nguyên) ...
+       
         bool isBackSelected = (selected == totalSaves);
         const char* backText = "BACK";
         int backY = tableStartY + 3 + (MAX_VISIBLE_SAVES * 2) + 2;
@@ -173,11 +173,8 @@ bool ShowLoadGameScreen() {
 }
 
 /**
- * @brief Hiển thị màn hình Ghi đè với logic tương tự màn hình Load.
+ *  Hiển thị màn hình Ghi đè với logic tương tự màn hình Load.
  */
- /**
-  * @brief Hiển thị màn hình Ghi đè. Cấu trúc hàm này tương tự ShowLoadGameScreen.
-  */
 void ShowOverwriteScreen() {
     std::vector<GameStateData> saves;
     // Tìm và tải tất cả các file save hiện có
@@ -305,12 +302,12 @@ void ShowOverwriteScreen() {
 }
 
 
-// =================================================================================
+
 // 4. CÁC HÀM GIAO DIỆN PHỤ
-// =================================================================================
+
 
 /**
- * @brief Hiển thị menu lựa chọn chính cho việc Save Game. Đã sửa lỗi hiển thị.
+  Hiển thị menu lựa chọn chính cho việc Save Game.
  */
 void ShowSaveGameScreen() {
     int selectedOption = 0;
@@ -355,7 +352,7 @@ void ShowSaveGameScreen() {
 }
 
 /**
- * @brief Hiển thị màn hình cho phép người dùng nhập tên file save mới.
+ Hiển thị màn hình cho phép người dùng nhập tên file save mới.
  */
 void ShowNewSaveScreen() {
     ClearScreenWithColor(255, 255, 255);
@@ -382,7 +379,7 @@ void ShowNewSaveScreen() {
 }
 
 /**
- * @brief Hiển thị một màn hình thông báo ngắn gọn.
+ Hiển thị một màn hình thông báo ngắn gọn.
  */
 void ShowConfirmationScreen(const std::string& filename) {
     ClearScreenWithColor(255, 255, 255);
@@ -397,12 +394,12 @@ void ShowConfirmationScreen(const std::string& filename) {
 }
 
 
-// =================================================================================
+
 // 5. CÁC HÀM XỬ LÝ LOGIC NỀN
-// =================================================================================
+
 
 /**
- * @brief Thực hiện hành động lưu game.
+ Thực hiện hành động lưu game.
  */
 void PerformSave(const std::string& filename) {
     GameStateData dataToSave = GetCurrentGameStateData();
@@ -413,8 +410,8 @@ void PerformSave(const std::string& filename) {
     }
 }
 
-/**
- * @brief Lấy trạng thái hiện tại của game và đóng gói vào struct.
+/*
+Lấy trạng thái hiện tại của game và đóng gói vào struct.
  */
 GameStateData GetCurrentGameStateData() {
     GameStateData currentData;
@@ -424,7 +421,7 @@ GameStateData GetCurrentGameStateData() {
     currentData.cursorX = _X;
     currentData.cursorY = _Y;
 
-    // --- 2. CHỖ NỐI DÂY QUAN TRỌNG (THÊM MỚI VÀO ĐÂY) ---
+    
     // Copy tên thật từ biến toàn cục vào gói tin save
     strcpy_s(currentData.p1Name, MAX_NAME_LEN, _player1_name);
     strcpy_s(currentData.p2Name, MAX_NAME_LEN, _player2_name);
@@ -450,8 +447,8 @@ GameStateData GetCurrentGameStateData() {
     return currentData;
 }
 
-/**
- * @brief Áp dụng dữ liệu từ file save vào game.
+/*
+  Áp dụng dữ liệu từ file save vào game.
  */
 void ApplyLoadedData(const GameStateData& data) {
     // 1. Bung bàn cờ (Giữ nguyên)
@@ -480,19 +477,19 @@ void ApplyLoadedData(const GameStateData& data) {
 
 
 
-// =================================================================================
+
 // 6.  CÁC HÀM HELPER CHUYÊN VẼ GIAO DIỆN
-// =================================================================================
+
 
 /**
- * @brief Vẽ một ô chữ nhật có màu nền và tự động căn chữ vào chính giữa ô đó.
- *        Đây là hàm cơ bản để xây dựng toàn bộ giao diện bảng.
- *
- * @param text Chuỗi ký tự (const char*) cần hiển thị.
- * @param cellX, cellY Tọa độ góc trên bên trái của ô (tính theo ký tự).
- * @param cellWidth Chiều rộng của ô (tính bằng số ký tự).
- * @param fg_r, fg_g, fg_b Các giá trị màu RGB cho chữ (Foreground).
- * @param bg_r, bg_g, bg_b Các giá trị màu RGB cho nền (Background).
+ Vẽ một ô chữ nhật có màu nền và tự động căn chữ vào chính giữa ô đó.
+        Đây là hàm cơ bản để xây dựng toàn bộ giao diện bảng.
+ 
+  text Chuỗi ký tự (const char*) cần hiển thị.
+  cellX, cellY Tọa độ góc trên bên trái của ô (tính theo ký tự).
+  cellWidth Chiều rộng của ô (tính bằng số ký tự).
+  fg_r, fg_g, fg_b Các giá trị màu RGB cho chữ (Foreground).
+  bg_r, bg_g, bg_b Các giá trị màu RGB cho nền (Background).
  */
 void DrawCenteredCell(const char* text, int cellX, int cellY, int cellWidth, int fg_r, int fg_g, int fg_b, int bg_r, int bg_g, int bg_b) {
     // Bước 1: Di chuyển con trỏ và đặt màu nền.
@@ -519,13 +516,13 @@ void DrawCenteredCell(const char* text, int cellX, int cellY, int cellWidth, int
 }
 
 
-//*
-//*@brief Vẽ toàn bộ khung cho bảng hiển thị, bao gồm tất cả các đường kẻ ngang và dọc.
-//*
-//* @param startX, startY Tọa độ góc trên bên trái của toàn bộ khung.
-//* @param numContentRows Số lượng hàng nội dung sẽ được hiển thị(ví dụ : MAX_VISIBLE_SAVES).
-//* @param nameWidth, dateWidth, typeWidth Chiều rộng của mỗi cột.
-//* /
+/*
+ Vẽ toàn bộ khung cho bảng hiển thị, bao gồm tất cả các đường kẻ ngang và dọc.
+
+ startX, startY Tọa độ góc trên bên trái của toàn bộ khung.
+ numContentRows Số lượng hàng nội dung sẽ được hiển thị(ví dụ : MAX_VISIBLE_SAVES).
+ ameWidth, dateWidth, typeWidth Chiều rộng của mỗi cột.
+*/
 void DrawTableFrame(int startX, int startY, int numContentRows, int nameWidth, int dateWidth, int typeWidth) {
     // Đặt màu mặc định cho khung
     SetColorRGB(255, 255, 255);
