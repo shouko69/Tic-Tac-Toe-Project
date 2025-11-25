@@ -24,9 +24,9 @@ using namespace std;
 extern const int TOTAL_ITEMS;
 extern const int TOTAL_PAUSE_ITEMS;
 extern const int TOTAL_NEW_GAME_OPTIONS;
-// ==================================================================================
-// 1. HÀM HỆ THỐNG & TIỆN ÍCH (SYSTEM & UTILS)
-// ==================================================================================
+
+// 1. HÀM HỆ THỐNG & TIỆN ÍCH
+
 void InitConsole() {
     system("chcp 65001"); // Thiết lập mã hóa UTF-8
     SetCursorVisible(false);
@@ -55,9 +55,9 @@ std::string GetRandomName() {
 
     return RANDOM_NAMES[dist(rng)];
 }
-// ==================================================================================
-// 2. QUẢN LÝ TRẠNG THÁI GAME (GAME STATE MANAGEMENT)
-// ==================================================================================
+
+// 2. QUẢN LÝ TRẠNG THÁI GAME 
+
 void StartGame() {
     // Dọn dẹp và reset dữ liệu
     ClearScreenWithColor(89, 79, 175);
@@ -82,9 +82,9 @@ void ExitGame() {
     ClearScreenWithColor(0, 0, 0);
     GabageCollect();
 }
-// ==================================================================================
-// 3. ĐIỀU KHIỂN DI CHUYỂN (MOVEMENT CONTROL)
-// ==================================================================================
+
+// 3. ĐIỀU KHIỂN DI CHUYỂN 
+=
 void MoveRight() {
     if (_X < BOARD_SIZE - 1) {
         _X++;
@@ -109,9 +109,9 @@ void MoveUp() {
         GotoBoard(_X, _Y);
     }
 }
-// ==================================================================================
-// 4. XỬ LÝ INPUT MENU (MENU INPUT HANDLING)
-// ==================================================================================
+
+// 4. XỬ LÝ INPUT MENU
+
 int HandleMainMenuInput() {
     int selected = 0;
     int old_selected = 0;
@@ -194,9 +194,9 @@ int HandleNewGameMenuInput() {
         }
     }
 }
-// ==================================================================================
-// 5. XỬ LÝ GAMEPLAY & NHẬP LIỆU (GAMEPLAY INPUT HANDLING)
-// ==================================================================================
+
+// 5. XỬ LÝ GAMEPLAY & NHẬP LIỆU
+
 bool Handle2PlayerNameInput() {
     int activeControl = 0;
     char p1_buffer[MAX_NAME_LEN] = "";
@@ -333,18 +333,18 @@ int HandleGameOverScreen() {
 }
 
 
-// ==========================================
-//       KHAI BÁO BIẾN
-// ==========================================
+
+//-----KHAI BÁO BIẾN-----
+
 // --- ĐỊNH NGHĨA BIẾN TOÀN CỤC ---
 GameState currentState = MENU;
 // --- KHAI BÁO KIỂU CON TRỎ HÀM (Cho gọn code) ---
 // Ý nghĩa: StateFunc là kiểu dữ liệu đại diện cho các hàm void k tham số
 typedef void (*StateFunc)();
 
-// ==========================================
-//       HÀM TIỆN ÍCH
-// ==========================================
+
+//-----HÀM TIỆN ÍCH-----
+
 void ShowComingSoonPopup() {
     ClearScreenWithColor(30, 30, 30);
     SetColorRGB(255, 255, 255);
@@ -356,9 +356,9 @@ void ShowComingSoonPopup() {
     _getch();
 }
 
-// ==========================================
-//       TRIỂN KHAI CÁC HÀM XỬ LÝ
-// ==========================================
+
+//-----TRIỂN KHAI CÁC HÀM XỬ LÝ-----
+
 void RunMenuState() {
     int choice = HandleMainMenuInput();
     switch (choice) {
@@ -483,9 +483,9 @@ void RunLoadState() {
         currentState = MENU;
     }
 }
-// ==========================================
-//         HÀM ĐIỀU PHỐI CHÍNH (StartApp)
-// ==========================================
+
+//-----HÀM ĐIỀU PHỐI CHÍNH (StartApp)-----
+
 void StartApp() {
     // 1. TẠO BẢNG ÁNH XẠ (MAP)
     // "Nếu trạng thái là A thì chạy hàm B"
