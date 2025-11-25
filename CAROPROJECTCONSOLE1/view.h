@@ -4,9 +4,9 @@
 #include <windows.h>
 #include <string>
 
-// ==========================================================================
+
 // 1. CẤU HÌNH KÍCH THƯỚC (BÀN CỜ TO)
-// ==========================================================================
+
 #define CONSOLE_WIDTH 165
 #define CONSOLE_HEIGHT 55
 
@@ -22,9 +22,9 @@
 #define LEFT ((CONSOLE_WIDTH - BOARD_VISUAL_WIDTH) / 2)
 #define TOP  ((CONSOLE_HEIGHT - BOARD_VISUAL_HEIGHT) / 2)
 
-// ==========================================================================
+
 // 2. CONSTANTS & STRUCTS
-// ==========================================================================
+
 extern const char* MENU_ITEMS[];
 extern const int TOTAL_ITEMS;
 extern const int START_Y;
@@ -38,9 +38,9 @@ struct DrawInstructionTrueColor {
     int y, x, r, g, b, l;
 };
 
-// ==========================================================================
+
 // 3. KHAI BÁO HÀM (FUNCTION PROTOTYPES)
-// ==========================================================================
+
 
 // --- Nhóm Hệ Thống (System & Utils) ---
 bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY); /*fontName: Đặt tên font muốn dùng (ví dụ: L"Consolas", L"Terminal"...), sizeX, sizeY: 
