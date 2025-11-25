@@ -32,6 +32,7 @@ void RunPlayState();
 void RunGameOverState();
 void RunPauseState();
 void RunSettingsState();
+void RunSettingsPState();
 void RunLoadState();
 void RunAboutState();
 void RunGuideState();

@@ -431,12 +431,17 @@ void RunPauseState() {
         currentState = PLAY_2P;
         break;
     case 2: ShowSaveGameScreen(); break;
+    case 3: RunSettingsPState(); break;
     case 4: currentState = MENU; SetCursorVisible(false); break;
     }
 }
 void RunSettingsState() {
     ShowComingSoonPopup();
     currentState = MENU;
+}
+void RunSettingsPState() {
+    ShowComingSoonPopup();
+    currentState = PAUSE;
 }
 void RunGuideState() {
     ShowComingSoonPopup(); // Tạm thời chưa có gì thì hiện cái này
