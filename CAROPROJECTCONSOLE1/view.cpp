@@ -657,6 +657,10 @@ void DrawFullMenu(int selected_index) {
     for (int i = 0; i < TOTAL_ITEMS; i++) {
         DrawMenuItem(i, i == selected_index);
     }
+
+    const char* guide = "'W': Move up, 'S': Move down,  'Enter': Select,  'ESC': Resume";
+    GotoXY(CenterX(guide), PAUSE_START_Y + TOTAL_PAUSE_ITEMS * 2 + 3);
+    std::cout << guide;
 }
 
 /*
@@ -686,6 +690,10 @@ void DrawFullNewGameMenu(int selected_index) {
     for (int i = 0; i < TOTAL_NEW_GAME_OPTIONS; ++i) {
         DrawNewGameMenuItem(i, (i == selected_index));
     }
+    
+    const char* guide = "'W': Move up, 'S': Move down,  'Enter': Select,  'ESC': Resume";
+    GotoXY(CenterX(guide), 50);
+    std::cout << guide;
 }
 
 // ==========================================================================
