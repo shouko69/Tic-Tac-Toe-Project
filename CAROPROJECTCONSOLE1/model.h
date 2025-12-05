@@ -1,5 +1,5 @@
 ﻿#pragma once
-
+#include <vector> // Bắt buộc để dùng std::vector
 #include "GameState.h"
 // lưu độ dài của các chữ cho chức năng 
 #define MAX_NAME_LEN 21    // <= 20 ký tự + '\0'
@@ -52,4 +52,25 @@ int TestBoard();
 int CheckBoard(int pX, int pY);
 bool IsFullBoard();
 bool CheckWin();
+
+
+// Struct nước đi AI trả về (Dùng cho giao diện)
+struct AIMove {
+    int x, y;   // Tọa độ bàn cờ
+    long long score; // Điểm số dự đoán
+};
+
+// --- KHAI BÁO NGUYÊN MẪU 4 HÀM AI ---
+
+// 1. Hàm lọc nước đi khả thi (Giảm tải tính toán)
+std::vector<_POINT> getPossibleMoves();
+
+// 2. Hàm lượng giá bàn cờ (Tính điểm thế trận)
+long evaluateBoard();
+
+// 3. Thuật toán Minimax (Cốt lõi trí tuệ nhân tạo)
+long minimax(int depth, long alpha, long beta, bool isMaximizing);
+
+// 4. Hàm tìm nước đi tốt nhất (Wrapper để gọi từ bên ngoài)
+AIMove FindBestMove(int depth);
 

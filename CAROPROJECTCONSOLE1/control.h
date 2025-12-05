@@ -18,7 +18,9 @@ void ShowCursorForBoard();
 std::string GetRandomName();
 int HandleNewGameMenuInput();
 bool Handle2PlayerNameInput();
+bool Handle1PlayerNameInput(); // new
 void Handle2PlayerGame();
+void Handle1PlayerGame(); //new
 int HandleGameOverScreen();
 int HandleMainMenuInput();
 int HandlePauseMenuInput();
@@ -27,6 +29,7 @@ void StartApp();
 // Khai báo các hàm xử lý từng màn hình (để dùng trong map)
 void RunMenuState();
 void RunNewGameModeState();
+void Run1PlayerNameInputState();
 void Run2PlayerNameInputState();
 void RunPlayState();
 void RunGameOverState();

@@ -70,16 +70,20 @@ void ShowGroupIntro();
 
 // --- Nhóm Nhập Tên (Player Name) ---
 void DrawFull2PlayerNameScreen(); // vẽ tiêu đề 2 PLAYERS, khung chọn tên
-void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer); // hàm hiển thị khi nhập tên 
-
+void DrawFull1PlayerNameScreen();
+void Update1PlayerNameScreen(int activeControl, const char* p1_buffer, const char* bot_buffer); // hàm hiển thị khi nhập tên 
+void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer);
 // --- Nhóm In-Game (Bàn cờ & UI chơi) ---
 void DrawFrame(int x, int y, int width, int height); // Vẽ Khung tùy ý
 void DrawFrame1(int x, int y, int width, int height);
 void DrawBoard(int pSize);
 void RedrawBoardState(); // Vẽ lại X/O trên bàn cờ
 void GotoBoard(int pX, int pY); // Nhảy đến tâm ô cờ để đặt con trỏ
-void DrawGameUI(); // Vẽ toàn bộ giao diện trong game (Nền, Bàn cờ, UI tĩnh, UI động)
+void DrawGameUI_1P();
+void DrawGameUI_2P(); // Vẽ toàn bộ giao diện trong game (Nền, Bàn cờ, UI tĩnh, UI động)
+void DrawStatic1P_UI();
 void DrawStatic2P_UI(); // Vẽ khung tên, điểm (Chạy 1 lần)
+void UpdateDynamic1P_UI();
 void UpdateDynamic2P_UI(); // Cập nhật điểm số, lượt đi (Chạy liên tục)
 
 // --- Nhóm Pause & Kết thúc ---

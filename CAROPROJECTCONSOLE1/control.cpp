@@ -73,7 +73,7 @@ void StartGame() {
     _Y = 0;
 
     // Vẽ giao diện
-    DrawGameUI();
+    DrawGameUI_2P();
     GotoBoard(_X, _Y);
     SetCursorVisible(true);
 }
@@ -196,7 +196,7 @@ int HandleNewGameMenuInput() {
 }
 
 // 5. XỬ LÝ GAMEPLAY & NHẬP LIỆU
-
+// Hàm nhập tên
 bool Handle2PlayerNameInput() {
     int activeControl = 0;
     char p1_buffer[MAX_NAME_LEN] = "";
@@ -253,6 +253,63 @@ bool Handle2PlayerNameInput() {
         }
     }
 }
+bool Handle1PlayerNameInput() {
+    int activeControl = 0;
+    char p1_buffer[MAX_NAME_LEN] = "";
+    char bot_buffer[MAX_NAME_LEN] = "MINIMAX AI";
+    DrawFull1PlayerNameScreen();
+
+    while (true) {
+        Update1PlayerNameScreen(activeControl, p1_buffer, bot_buffer);
+        int key = _getch();
+
+        if (key == 27) return false; // ESC
+        if (key == 9) { // TAB
+            activeControl = (activeControl + 1) % 3;
+            continue;
+        }
+
+        switch (activeControl) {
+        case 0: // Player 1
+            if (isprint(key) && strlen(p1_buffer) < MAX_NAME_LEN - 1) {
+                size_t len = strlen(p1_buffer);
+                p1_buffer[len] = key; p1_buffer[len + 1] = '\0';
+            }
+            else if (key == 8 && strlen(p1_buffer) > 0) { // Backspace
+                p1_buffer[strlen(p1_buffer) - 1] = '\0';
+            }
+            else if (key == 13) { // Enter
+                if (strlen(p1_buffer) == 0) strcpy_s(p1_buffer, MAX_NAME_LEN, GetRandomName().c_str());
+                activeControl = 1;
+            }
+            break;
+
+        case 1: // BOT
+            if (isprint(key) && strlen(bot_buffer) < MAX_NAME_LEN - 1) {
+                size_t len = strlen(bot_buffer);
+                bot_buffer[len] = key; bot_buffer[len + 1] = '\0';
+            }
+            else if (key == 8) { // Backspace
+                if (strlen(bot_buffer) > 0) bot_buffer[strlen(bot_buffer) - 1] = '\0';
+                else activeControl = 0;
+            }
+            else if (key == 13) { // Enter
+                if (strlen(bot_buffer) == 0) strcpy_s(bot_buffer, MAX_NAME_LEN, GetRandomName().c_str());
+                if (strlen(p1_buffer) > 0) {
+                    strcpy_s(_player1_name, MAX_NAME_LEN, p1_buffer);
+                    strcpy_s(_player2_name, MAX_NAME_LEN, bot_buffer);
+                    return true;
+                }
+            }
+            break;
+
+        case 2: // Nút BACK
+            if (key == 13) return false;
+            break;
+        }
+    }
+}
+
 void Handle2PlayerGame() {
     GotoBoard(_X, _Y);
     int key = _getch();
@@ -308,6 +365,110 @@ void Handle2PlayerGame() {
         }
     }
 }
+
+void Handle1PlayerGame() {
+    // =============================================================
+    // PHẦN 1: LƯỢT CỦA AI (MÁY TÍNH - PLAYER 2)
+    // =============================================================
+    if (_currentPlayer == 2) {
+        // 1. Tạo độ trễ nhỏ để cảm giác máy đang suy nghĩ (và tránh giật màn hình quá nhanh)
+        GotoXY(0, 0); 
+        // debug std::cout << "AI Thinking..."; 
+        Sleep(300);
+
+        // 2. Gọi bộ não Minimax để tìm nước đi
+        // Depth = 3 là vừa phải với bàn 12x12 (đủ khôn và không quá chậm)
+        AIMove bestMove = FindBestMove(4);
+
+        // 3. Thực hiện nước đi (Nếu tìm thấy nước đi hợp lệ)
+        if (bestMove.x != -1 && bestMove.y != -1) {
+
+            // A. Cập nhật Model (Dữ liệu ngầm)
+            // Lưu ý: bestMove.y là Dòng (Row), bestMove.x là Cột (Col)
+            // Giả sử -1 là quân O của máy. (Phải khớp với logic trong model.cpp)
+            _A[bestMove.y][bestMove.x].c = -1;
+
+            // B. Cập nhật View (Giao diện)
+            DrawOmini(bestMove.x, bestMove.y);
+            _moveCount++;
+
+            // C. Kiểm tra thắng thua (Logic giống hệt người chơi)
+            int status = TestBoard();
+            if (status != 2) { // Có kết quả
+                if (status == -1) { _gameWinner = 2; _player2_score++; } // AI thắng
+                else if (status == 1) { _gameWinner = 1; _player1_score++; } // Người thắng
+                else { _gameWinner = 0; } // Hòa
+                currentState = GAME_OVER;
+            }
+            else { // Chưa có kết quả -> Đổi lượt sang Người
+                _currentPlayer = 1;
+                _TURN = !_TURN; // Đổi icon lượt ở UI
+                UpdateDynamic1P_UI(); // Cập nhật UI (nếu có hàm riêng cho 1 Player)
+            }
+        }
+        return; // Kết thúc lượt xử lý của AI, thoát hàm để vòng lặp chính chạy tiếp
+    }
+    
+
+    // =============================================================
+    // PHẦN 2: LƯỢT CỦA NGƯỜI CHƠI (PLAYER 1)
+    // =============================================================
+
+    // Chỉ hiện con trỏ khi đến lượt người chơi
+    GotoBoard(_X, _Y);
+
+    // Chờ người dùng bấm phím
+    int key = _getch();
+    if (key == 0 || key == 224) key = _getch();
+    else key = toupper(key);
+
+    if (key == 27) { // ESC -> Pause
+        currentState = PAUSE;
+        return;
+    }
+
+    bool validAction = false;
+
+    // Điều khiển di chuyển (Chỉ cho Player 1)
+    if (key == 'W' || key == 72) MoveUp();
+    else if (key == 'S' || key == 80) MoveDown();
+    else if (key == 'A' || key == 75) MoveLeft();
+    else if (key == 'D' || key == 77) MoveRight();
+    else if (key == 'F' || key == 32 || key == 13) validAction = true; // Space/F/Enter để đánh
+
+    // Xử lý khi người chơi chọn đánh cờ
+    if (validAction) {
+        // Kiểm tra xem ô đó có trống không (Logic kiểm tra của bạn)
+        // Lưu ý: CheckBoard của bạn phải trả về true/1 nếu ĐÁNH ĐƯỢC (ô trống)
+        if (CheckBoard(_X, _Y) != 0) {
+
+            // A. Cập nhật Model cho Người
+            // (Thường hàm DrawXmini hoặc CheckBoard của bạn đã làm điều này? 
+            // Nếu chưa, hãy bỏ comment dòng dưới để chắc chắn)
+            _A[_Y][_X].c = 1;
+
+            _moveCount++;
+            DrawXmini(_X, _Y); // Vẽ quân X
+
+            // B. Kiểm tra thắng thua
+            int status = TestBoard();
+            if (status != 2) {
+                if (status == -1) { _gameWinner = 2; _player2_score++; }
+                else if (status == 1) { _gameWinner = 1; _player1_score++; }
+                else { _gameWinner = 0; }
+                currentState = GAME_OVER;
+            }
+            else { // Đổi lượt sang AI
+                _currentPlayer = 2;
+                _TURN = !_TURN;
+                UpdateDynamic1P_UI();
+            }
+        }
+    }
+}
+
+
+
 int HandleGameOverScreen() {
     int selectedOption = 1;
     DrawGameOverScreen(selectedOption, true);
@@ -331,8 +492,6 @@ int HandleGameOverScreen() {
         }
     }
 }
-
-
 
 //-----KHAI BÁO BIẾN-----
 
@@ -373,12 +532,11 @@ void RunMenuState() {
 void RunNewGameModeState() {
     int choice = HandleNewGameMenuInput();
     switch (choice) {
-    case 0: // 1 Player -> Coming Soon
-        ShowComingSoonPopup();
-        currentState = MENU;
+    case 0: // 1 Player
+        currentState = PLAYER_NAME_INPUT_1P;
         break;
     case 1: // 2 Players
-        currentState = PLAYER_NAME_INPUT;
+        currentState = PLAYER_NAME_INPUT_2P;
         break;
     case 2: // Back
     case ESCAPE_KEY:
@@ -396,8 +554,23 @@ void Run2PlayerNameInputState() {
         currentState = NEW_GAME_MODE;
     }
 }
-void RunPlayState() {
+void RunPlayState_2P() {
     Handle2PlayerGame();
+    GotoBoard(_X, _Y);
+    Sleep(15);
+}
+void Run1PlayerNameInputState() {
+    bool isReady = Handle1PlayerNameInput();
+    if (isReady) {
+        StartGame(); // Hàm reset dữ liệu cũ của bạn
+        currentState = PLAY_1P;
+    }
+    else {
+        currentState = NEW_GAME_MODE;
+    }
+}
+void RunPlayState_1P() {
+    Handle1PlayerGame();
     GotoBoard(_X, _Y);
     Sleep(15);
 }
@@ -419,7 +592,7 @@ void RunPauseState() {
     int pauseChoice = HandlePauseMenuInput();
     switch (pauseChoice) {
     case 0: // Resume
-        DrawGameUI();
+        DrawGameUI_2P();
         DrawBoard(BOARD_SIZE);
         RedrawBoardState();
         SetCursorVisible(true);
@@ -455,7 +628,7 @@ void RunLoadState() {
     if (loadSuccess) {
         ClearScreenWithColor(89, 79, 175);
         SetColorRGB(0, 0, 0);
-        DrawGameUI();
+        DrawGameUI_2P();
 
         int status = TestBoard();
         if (status != 2) { // Game đã kết thúc
@@ -492,8 +665,10 @@ void StartApp() {
     std::map<GameState, StateFunc> stateMachine;
     stateMachine[MENU] = RunMenuState;
     stateMachine[NEW_GAME_MODE] = RunNewGameModeState;
-    stateMachine[PLAYER_NAME_INPUT] = Run2PlayerNameInputState;
-    stateMachine[PLAY_2P] = RunPlayState;
+    stateMachine[PLAYER_NAME_INPUT_1P] = Run1PlayerNameInputState; //AI
+    stateMachine[PLAYER_NAME_INPUT_2P] = Run2PlayerNameInputState;
+    stateMachine[PLAY_1P] = RunPlayState_1P;
+    stateMachine[PLAY_2P] = RunPlayState_2P;
     stateMachine[GAME_OVER] = RunGameOverState;
     stateMachine[PAUSE] = RunPauseState;
     stateMachine[SETTINGS] = RunSettingsState;

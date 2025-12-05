@@ -643,7 +643,7 @@ void DrawFullMenu(int selected_index) {
     
 
     // SỬA LẠI: Dùng std::cout
-    std::cout << "████████╗██╗  ██╗███████╗       █████╗  █████╗ ██████╗  ██████╗     ██████╗  █████╗ ███╗   ███╗███████╗\n"; GotoXY(i, 2);
+    std::cout << "████████╗██╗  ██╗███████╗      █████╗  █████╗ ██████╗  ██████╗      ██████╗  █████╗ ███╗   ███╗███████╗\n"; GotoXY(i, 2);
     std::cout << "╚══██╔══╝██║  ██║██╔════╝     ██╔════╝██╔══██╗██╔══██╗██╔═══██╗    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝\n"; GotoXY(i, 3);
     std::cout << "   ██║   ███████║█████╗       ██║     ███████║██████╔╝██║   ██║    ██║  ███╗███████║██╔████╔██║█████╗  \n"; GotoXY(i, 4);
     std::cout << "   ██║   ██╔══██║██╔══╝       ██║     ██╔══██║██╔══██╗██║   ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  \n"; GotoXY(i, 5);
@@ -702,6 +702,26 @@ void DrawFullNewGameMenu(int selected_index) {
  * Chức năng: Vẽ toàn bộ màn hình nhập tên LẦN ĐẦU TIÊN.
  * Hàm này có ClearScreen và chỉ được gọi một lần.
  */
+void DrawFull1PlayerNameScreen() {
+    ClearScreenWithColor(89, 79, 175);
+    SetColorRGB(255, 100, 180);
+    int i = 50;
+    GotoXY(i, 1);
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    std::wcout << L" ██╗    ██████╗ ██╗      █████╗ ██╗   ██╗███████╗██████╗ ███████╗ \n"; GotoXY(i, 2);
+    std::wcout << L"███║    ██╔══██╗██║     ██╔══██╗╚██╗ ██╔╝██╔════╝██╔══██╗██╔════╝ \n"; GotoXY(i, 3);
+    std::wcout << L"╚██║    ██████╔╝██║     ███████║ ╚████╔╝ █████╗  ██████╔╝███████╗ \n"; GotoXY(i, 4);
+    std::wcout << L" ██║    ██╔═══╝ ██║     ██╔══██║  ╚██╔╝  ██╔══╝  ██╔══██╗╚════██║ \n"; GotoXY(i, 5);
+    std::wcout << L" ██║    ██║     ███████╗██║  ██║   ██║   ███████╗██║  ██║███████║ \n"; GotoXY(i, 6);
+    std::wcout << L" ╚═╝    ╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝ \n";
+    _setmode(_fileno(stdout), _O_TEXT); // Trả về chế độ thường
+
+    GotoXY(50, 23); std::cout << ">> Player's Name1 <<";
+    GotoXY(100, 23); std::cout << ">> Bot Player <<";
+    GotoXY(50, 24); std::cout << "Less than 20 characters";
+    GotoXY(CenterX("Press ENTER to confirm and proceed, TAB to switch.") + 4, 40);
+    GotoXY(CenterX("Press ESC to exit without saving.") + 4, 41);
+} // tạm thời xong
 void DrawFull2PlayerNameScreen() {
     ClearScreenWithColor(89, 79, 175);
     SetColorRGB(255, 100, 180);
@@ -725,7 +745,6 @@ void DrawFull2PlayerNameScreen() {
     GotoXY(CenterX("Press ESC to exit without saving.") + 4, 41);
     std::cout << "Press ESC to exit without saving.";
 }
-
 int GetConsoleWidth() {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     int columns = 80;
@@ -746,6 +765,35 @@ int CenterX(const std::string& text) {
  * Chức năng: CHỈ CẬP NHẬT các phần động của màn hình (tên, con trỏ, nút BACK).
  * Hàm này KHÔNG có ClearScreen, không gây nhấp nháy.
  */
+void Update1PlayerNameScreen(int activeControl, const char* p1_buffer, const char* bot_buffer) {
+    // activeControl: 0=P1_Typing, 1=BOT, 2=Global_Back_Button
+
+    // Xóa vùng tên cũ để cập nhật
+    GotoXY(50, 26); std::cout << "                         ";
+    GotoXY(100, 26); std::cout << "                         ";
+
+    // Vẽ tên P1 và con trỏ nếu đang được chọn
+    GotoXY(50, 26); std::cout << p1_buffer;
+    if (activeControl == 0) {
+        std::cout << "_";
+    }
+
+    // Vẽ tên P2 và con trỏ nếu đang được chọn
+    GotoXY(100, 26); std::cout << bot_buffer;
+    if (activeControl == 1) {
+        std::cout << "_";
+    }
+
+    // 3. Vẽ nút BACK toàn cục và tô sáng nếu đang được chọn
+    if (activeControl == 2) {
+        GotoXY(CenterX("[ BACK ]") + 4, 33);
+        std::cout << "[ BACK ]";
+    }
+    else {
+        GotoXY(CenterX("  BACK  ") + 4, 33);
+        std::cout << "  BACK  ";
+    }
+}
 void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer) {
     // activeControl: 0=P1_Typing, 1=P2_Typing, 2=Global_Back_Button
 
@@ -844,6 +892,22 @@ void GotoBoard(int pX, int pY) {
     int screenY = startY + (CELL_VISUAL_HEIGHT / 2);
     GotoXY(screenX, screenY);
 }
+void DrawStatic1P_UI() {
+    const int p1_box_x = 10, p1_box_y = 5;  // Căn chỉnh lại tọa độ cho đẹp
+    const int p2_box_x = 130, p2_box_y = 5;
+
+    // Vẽ cho Player 1
+    GotoXY(p1_box_x, p1_box_y);     std::cout << _player1_name << " (X)";
+    GotoXY(p1_box_x, p1_box_y + 1); std::cout << "---------------";
+    GotoXY(p1_box_x, p1_box_y + 2); std::cout << "WINS: ";
+    GotoXY(p1_box_x, p1_box_y + 3); std::cout << "MOVES: ";
+
+    // Vẽ cho Player 2
+    GotoXY(p2_box_x, p2_box_y);     std::cout << _player2_name << " (O)";
+    GotoXY(p2_box_x, p2_box_y + 1); std::cout << "---------------";
+    GotoXY(p2_box_x, p2_box_y + 2); std::cout << "WINS: ";
+    GotoXY(p2_box_x, p2_box_y + 3); std::cout << "MOVES: ";
+}
 /*
  * Chức năng: Vẽ các thành phần TĨNH của giao diện 2 người chơi MỘT LẦN.
  * Ví dụ: tên người chơi, chữ "WINS:", "MOVES:".
@@ -869,6 +933,44 @@ void DrawStatic2P_UI() {
  * Hàm này được gọi liên tục nhưng không gây nhấp nháy.
  */
  // hàm này sửa sau xài tạm ngôi sao
+void UpdateDynamic1P_UI() {
+    SetColorRGB(0, 0, 0);       // Chữ đen
+    SetBgRGB(89, 79, 175);      // Màu nền (tím nhạt giống box điểm)
+
+    // Tọa độ này phải khớp với lúc bạn vẽ khung tên (DrawBoard)
+    const int p1_box_x = 10, p1_box_y = 5;
+    const int ai_box_x = 130, ai_box_y = 5; // Đổi tên biến p2 -> ai cho dễ hiểu
+
+    // 1. Cập nhật điểm số và lượt đi
+    // PLAYER (P1)
+    GotoXY(p1_box_x + 7, p1_box_y + 2);
+    std::cout << _player1_score << "  "; // In điểm người chơi
+
+    GotoXY(p1_box_x + 7, p1_box_y + 3);
+    std::cout << (_moveCount + 1) / 2 << "  "; // In số lượt đã đi
+
+    // COMPUTER (AI - P2)
+    GotoXY(ai_box_x + 7, ai_box_y + 2);
+    std::cout << _player2_score << "  "; // In điểm của AI
+
+    GotoXY(ai_box_x + 7, ai_box_y + 3);
+    std::cout << _moveCount / 2 << "  "; // In số lượt AI đã đi
+
+    // 2. Cập nhật ngôi sao báo lượt (*)
+    // Xóa sao cũ ở cả 2 bên
+    GotoXY(p1_box_x - 3, p1_box_y); std::cout << " ";
+    GotoXY(ai_box_x - 3, ai_box_y); std::cout << " ";
+
+    // Vẽ sao mới vào bên đang có lượt
+    if (_currentPlayer == 1) {
+        // Lượt người chơi
+        GotoXY(p1_box_x - 3, p1_box_y); std::cout << "*";
+    }
+    else {
+        // Lượt máy tính
+        GotoXY(ai_box_x - 3, ai_box_y); std::cout << "*";
+    }
+}
 void UpdateDynamic2P_UI() {
     SetColorRGB(0, 0, 0);
     SetBgRGB(89, 79, 175);
@@ -893,7 +995,22 @@ void UpdateDynamic2P_UI() {
         GotoXY(p2_box_x - 3, p2_box_y); std::cout << "*";
     }
 }
-void DrawGameUI() {
+void DrawGameUI_1P() {
+    ClearScreenWithColor(89, 79, 175);
+
+    DrawBoard(BOARD_SIZE); // Ve man hinh game
+    // 2. Vẽ các thông tin TĨNH (Tên, khung, chữ WINS, MOVES...)
+    // Bắt buộc phải có, nếu không Resume xong chỉ thấy mỗi số điểm bay lơ lửng
+    SetColorRGB(0, 0, 0); // Chọn màu chữ (ví dụ đen)
+    DrawStatic1P_UI();
+    // 3. Vẽ các thông tin ĐỘNG hiện tại (Điểm số, lượt đi đang dở dang)
+    // Để khi Resume, nó hiện đúng điểm số cũ chứ không phải số 0
+    UpdateDynamic1P_UI();
+
+    // 4. Vẽ trang trí (nếu có dùng ảnh gạch, mario...)
+    DrawBrickp(0, 47);
+}
+void DrawGameUI_2P() {
     ClearScreenWithColor(89, 79, 175);
 
     DrawBoard(BOARD_SIZE); // Ve man hinh game
@@ -901,7 +1018,6 @@ void DrawGameUI() {
     // Bắt buộc phải có, nếu không Resume xong chỉ thấy mỗi số điểm bay lơ lửng
     SetColorRGB(0, 0, 0); // Chọn màu chữ (ví dụ đen)
     DrawStatic2P_UI();
-
     // 3. Vẽ các thông tin ĐỘNG hiện tại (Điểm số, lượt đi đang dở dang)
     // Để khi Resume, nó hiện đúng điểm số cũ chứ không phải số 0
     UpdateDynamic2P_UI();
