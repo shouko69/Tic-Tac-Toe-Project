@@ -618,19 +618,61 @@ void DrawFancyBox(int x, int y, int width, std::string text, bool isSelected) {
 void DrawMenuItem(int index, bool is_selected) {
     if (index < 0 || index >= TOTAL_ITEMS) return;
 
+    // 1. Lấy nội dung chữ
     std::string menuText = std::string(MENU_ITEMS[index]);
 
-    // Chiều rộng cố định cho cái hộp (để tất cả nút bằng nhau)
-    const int BOX_WIDTH = 30;
+    // 2. Định nghĩa bông tuyết và khoảng cách
+    // Lưu ý: Copy ký tự bông tuyết này: ❄
+    std::string snowflake = "*";
+    std::string padding = " "; // Khoảng cách giữa bông tuyết và chữ
 
-    // Tính tọa độ X để cái hộp nằm giữa màn hình
-    int x = CenterX(std::string(BOX_WIDTH + 2, ' ')); // +2 vì tính cả viền
+    // 3. Tính toán độ dài tổng để căn giữa
+    // Tổng = (Bông tuyết + Padding) + Chữ + (Padding + Bông tuyết)
+    // Lưu ý: Ký tự ❄ trong UTF-8 thường tính là 1 ký tự hiển thị nhưng có thể là 2-3 byte. 
+    // Để căn giữa chuẩn nhất về mặt thị giác, ta ước lượng độ rộng.
+    int contentLen = menuText.length() + 6; // +6 cho 2 bông tuyết và khoảng trắng
+    int x = CenterX(std::string(contentLen, ' '));
 
-    // Tính tọa độ Y. Mỗi hộp cao 3 dòng, cộng thêm 1 dòng khoảng cách = 4
-    int y = START_Y + (index * 3);
+    // Tính tọa độ Y (Giãn cách 2 dòng cho thoáng)
+    int y = START_Y + (index * 2) + 5;
 
-    // Gọi hàm vẽ hộp
-    DrawFancyBox(x, y, BOX_WIDTH, menuText, is_selected);
+    // --- BẮT ĐẦU VẼ ---
+    GotoXY(x, y);
+
+    // BƯỚC 1: VẼ BÊN TRÁI (Bông tuyết)
+    if (is_selected) {
+        SetBgRGB(202, 196, 248); // Nền Lavender
+        SetColorRGB(0, 255, 255); // Màu Cyan (Xanh lơ) cho bông tuyết
+        std::cout << snowflake << padding;
+    }
+    else {
+        SetBgRGB(202, 196, 248); // Nền Lavender
+        SetColorRGB(202, 196, 248); // Màu chữ trùng màu nền (để ẩn đi)
+        std::cout << " " << padding; // In khoảng trắng để giữ vị trí
+    }
+
+    // BƯỚC 2: VẼ CHỮ GIỮA
+    if (is_selected) {
+        SetBgRGB(202, 196, 248);   // Nền Lavender
+        SetColorRGB(255, 105, 180); // Màu Hồng Đậm (Hot Pink) khi chọn
+    }
+    else {
+        SetBgRGB(202, 196, 248);   // Nền Lavender
+        SetColorRGB(80, 60, 120);  // Màu Tím Than khi không chọn
+    }
+    std::cout << menuText;
+
+    // BƯỚC 3: VẼ BÊN PHẢI (Bông tuyết)
+    if (is_selected) {
+        SetBgRGB(202, 196, 248);
+        SetColorRGB(0, 255, 255); // Màu Cyan
+        std::cout << padding << snowflake;
+    }
+    else {
+        SetBgRGB(202, 196, 248);
+        SetColorRGB(202, 196, 248); // Ẩn đi
+        std::cout << padding << " ";
+    }
 }
 
 void DrawFullMenu(int selected_index) {
@@ -667,12 +709,54 @@ void DrawFullMenu(int selected_index) {
  * Chức năng: Vẽ một mục menu riêng lẻ của màn hình New Game.
  */
 void DrawNewGameMenuItem(int index, bool is_selected) {
-    GotoXY(CenterX(NEW_GAME_OPTIONS[index]), 15 + index * 2);
+    // (Giả sử bạn có biến đếm số lượng option, ví dụ 2 mục)
+    // if (index < 0 || index >= TOTAL_NEW_GAME_OPTIONS) return;
+
+    std::string text = NEW_GAME_OPTIONS[index];
+    std::string snowflake = "*";
+    std::string padding = " "; // Padding là 2 khoảng trắng
+
+    // 1. Tính toán tọa độ để căn giữa
+    // Tổng độ dài = Bông tuyết(1) + Padding(2) + Text + Padding(2) + Bông tuyết(1) = Text + 6
+    int fullLen = text.length() + 6;
+    int x = CenterX(std::string(fullLen, ' '));
+    int y = 15 + index * 2; // Giữ nguyên logic Y của bạn
+
+    GotoXY(x, y);
+
+    // 2. VẼ BÊN TRÁI
     if (is_selected) {
-        std::cout << ">> " << NEW_GAME_OPTIONS[index] << " <<";
+        SetBgRGB(202, 196, 248);  // Nền Lavender
+        SetColorRGB(0, 255, 255); // Màu Xanh (Cyan) cho dấu *
+        std::cout << snowflake << padding;
     }
     else {
-        std::cout << "   " << NEW_GAME_OPTIONS[index] << "   ";
+        SetBgRGB(202, 196, 248);
+        SetColorRGB(202, 196, 248); // Ẩn đi (trùng màu nền)
+        std::cout << " " << padding; // In khoảng trắng giữ chỗ
+    }
+
+    // 3. VẼ CHỮ GIỮA
+    if (is_selected) {
+        SetBgRGB(100, 100, 255);    // Nền Xanh Đậm (cho nổi bật)
+        SetColorRGB(255, 255, 255); // Chữ Trắng
+    }
+    else {
+        SetBgRGB(202, 196, 248);    // Nền Lavender
+        SetColorRGB(80, 60, 120);   // Chữ Tím Than
+    }
+    std::cout << text;
+
+    // 4. VẼ BÊN PHẢI
+    if (is_selected) {
+        SetBgRGB(202, 196, 248);  // Nền Lavender
+        SetColorRGB(0, 255, 255); // Màu Xanh (Cyan) cho dấu *
+        std::cout << padding << snowflake;
+    }
+    else {
+        SetBgRGB(202, 196, 248);
+        SetColorRGB(202, 196, 248); // Ẩn đi
+        std::cout << padding << " ";
     }
 }
 
@@ -683,7 +767,25 @@ void DrawFullNewGameMenu(int selected_index) {
     // 1. Xóa màn hình và vẽ nền
     ClearScreenWithColor(89, 79, 175); // Dùng màu nền của bạn
 
+    SetColorRGB(100, 0, 150);
 
+    // Mảng chứa ASCII Art của chữ "GAME MODE"
+    const char* title[] = {
+        " ██████╗  █████╗ ███╗   ███╗███████╗    ███╗   ███╗ ██████╗ ██████╗ ███████╗",
+        "██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ████╗ ████║██╔═══██╗██╔══██╗██╔════╝",
+        "██║  ███╗███████║██╔████╔██║█████╗      ██╔████╔██║██║   ██║██║  ██║█████╗  ",
+        "██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║╚██╔╝██║██║   ██║██║  ██║██╔══╝  ",
+        "╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ██║ ╚═╝ ██║╚██████╔╝██████╔╝███████╗",
+        " ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚═╝     ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝"
+    };
+
+    int lines = 6;
+
+    // Vẽ từng dòng
+    for (int i = 0; i < lines; i++) {
+        GotoXY(45, 1 + i);
+        std::cout << title[i];
+    }
 
     // 3. Vẽ tất cả các mục menu
     SetColorRGB(255, 100, 180);
@@ -1102,32 +1204,68 @@ void DrawGameOverScreen(int selectedOption, bool drawAll) {
 void DrawPauseMenuItem(int index, bool is_selected) {
     if (index < 0 || index >= TOTAL_PAUSE_ITEMS) return;
 
-    // 1. Chỉ lấy text gốc
     std::string text = std::string(PAUSE_ITEMS[index]);
-
-    // 2. Quyết định màu sắc
-    if (is_selected) {
-        SetColorRGB(255, 100, 180); 
-    }
-    else {
-        SetColorRGB(80, 60, 120); 
-    }
-
-    // 3. Căn giữa và in
     int x = CenterX(text);
     int y = PAUSE_START_Y + index * 2;
-    GotoXY(x, y);
-    std::cout << text;
+
+    if (is_selected) {
+        // --- VẼ TRẠNG THÁI ĐANG CHỌN (CÓ SAO) ---
+
+        // 1. Vẽ sao trái
+        SetColorRGB(0, 255, 255);
+        GotoXY(x - 2, y);
+        std::cout << "*";
+
+        // 2. Vẽ text
+        SetColorRGB(255, 100, 180);
+        GotoXY(x, y);
+        std::cout << text;
+
+        // 3. Vẽ sao phải
+        SetColorRGB(0, 255, 255);
+        GotoXY(x + text.length() + 1, y);
+        std::cout << "*";
+    }
+    else {
+        // --- TRẠNG THÁI KHÔNG CHỌN ---
+
+        // 1. XÓA SAO TRÁI
+        // Quan trọng: Set màu về Đen (hoặc màu nền của bạn) để dấu cách không hiện thành ô vuông
+        SetColorRGB(0, 0, 0);
+        GotoXY(x - 2, y);
+        std::cout << " ";
+
+        // 2. VẼ TEXT
+        // Set lại màu chữ cho mục không chọn
+        SetColorRGB(80, 60, 120);
+        GotoXY(x, y);
+        std::cout << text;
+
+        // 3. XÓA SAO PHẢI
+        // Lại set màu về Đen để xóa sạch
+        SetColorRGB(0, 0, 0);
+        GotoXY(x + text.length() + 1, y);
+        std::cout << " ";
+    }
 }
 void DrawFullPauseMenu(int selected_index) {
     
     ClearScreenWithColor(255, 255, 255);
 
     // --- 2. VẼ TIÊU ĐỀ  ---
-    const std::string title = "GAME PAUSED";
-    SetColorRGB(0, 0, 0); // Chữ tiêu đề màu trắng
-    GotoXY(CenterX(title), 4);
-    std::cout << title;
+    const char* title[] = {
+        " ██████╗  █████╗ ███╗   ███╗███████╗    ██████╗  █████╗ ██╗   ██╗███████╗███████╗██████╗ ",
+        "██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔══██╗██╔══██╗██║   ██║██╔════╝██╔════╝██╔══██╗",
+        "██║  ███╗███████║██╔████╔██║█████╗      ██████╔╝███████║██║   ██║███████╗█████╗  ██║  ██║",
+        "██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██╔═══╝ ██╔══██║██║   ██║╚════██║██╔══╝  ██║  ██║",
+        "╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ██║     ██║  ██║╚██████╔╝███████║███████╗██████╔╝",
+        " ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═════╝ "
+    };
+
+    for (int i = 0; i < 6; i++) {
+        GotoXY(40, 1 + i);
+        std::cout << title[i];
+    }
 
     // --- 3. VẼ DANH SÁCH MENU ---
     for (int i = 0; i < TOTAL_PAUSE_ITEMS; i++) {

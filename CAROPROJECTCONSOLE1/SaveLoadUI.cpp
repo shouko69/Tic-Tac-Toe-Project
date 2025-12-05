@@ -303,7 +303,7 @@ void ShowOverwriteScreen() {
 
 
 
-// 4. CÁC HÀM GIAO DIỆN PHỤ
+// 4. CÁC HÀM GIAO DIỆN PHỤ 
 
 
 /**
@@ -312,41 +312,102 @@ void ShowOverwriteScreen() {
 void ShowSaveGameScreen() {
     int selectedOption = 0;
     const int totalOptions = 3;
-    const int MENU_WIDTH = 30;
+    const int MENU_WIDTH = 30; // Dùng để căn chỉnh nếu cần, nhưng ở dưới ta dùng text length trực tiếp
     const int startX = (CONSOLE_WIDTH - MENU_WIDTH) / 2;
     const int startY = (CONSOLE_HEIGHT / 2) - 2;
 
-    ClearScreenWithColor(255, 255, 255);
+    ClearScreenWithColor(255, 255, 255); // Nền trắng
+
+    const char* title[] = {
+        "███████╗ █████╗ ██╗   ██╗███████╗     ██████╗  █████╗ ███╗   ███╗███████╗",
+        "██╔════╝██╔══██╗██║   ██║██╔════╝     ██╔════╝ ██╔══██╗████╗ ████║██╔════╝",
+        "███████╗███████║██║   ██║█████╗       ██║  ███╗███████║██╔████╔██║█████╗  ",
+        "╚════██║██╔══██║╚██╗ ██╔╝██╔══╝       ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ",
+        "███████║██║  ██║ ╚████╔╝ ███████╗     ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗",
+        "╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝"
+    };
+
+    int lines = 6;
+    // Vẽ tiêu đề (Title)
+    for (int i = 0; i < lines; i++) {
+        SetColorRGB(0, 0, 0); // Title màu đen
+        GotoXY(50, 1 + i);
+        std::cout << title[i];
+    }
 
     while (true) {
+        // Duyệt qua tất cả các lựa chọn để vẽ lại trạng thái đúng
         for (int i = 0; i < totalOptions; ++i) {
-            GotoXY(startX, startY + i);
-            SetColorRGB(0, 0, 0);
+
+            // 1. Xác định nội dung text
             std::string text;
             if (i == 0) text = "Save to New File";
             else if (i == 1) text = "Overwrite Existing Save";
             else if (i == 2) text = "Back";
-            std::cout << std::left << std::setw(MENU_WIDTH) << text;
+
+            int y = startY + i; // Toạ độ Y của dòng hiện tại
+
+            if (i == selectedOption) {
+                // === TRẠNG THÁI ĐANG CHỌN (CÓ BÔNG TUYẾT) ===
+
+                // Bông tuyết trái (Màu Xanh - Blue/Cyan)
+                // Vì nền trắng nên dùng màu xanh đậm (0, 0, 255) hoặc xanh lơ (0, 150, 255) sẽ rõ hơn
+                SetColorRGB(0, 150, 255);
+                GotoXY(startX - 2, y);
+                std::cout << "*";
+
+                // Text chính (Màu Hồng)
+                SetColorRGB(255, 100, 180);
+                GotoXY(startX, y);
+                std::cout << text;
+
+                // Bông tuyết phải (Màu Xanh)
+                SetColorRGB(0, 150, 255);
+                GotoXY(startX + text.length() + 1, y);
+                std::cout << "*";
+            }
+            else {
+                // === TRẠNG THÁI KHÔNG CHỌN (XÓA BÔNG TUYẾT) ===
+
+                // Xóa bông tuyết trái (In dấu cách màu TRẮNG trùng màu nền)
+                SetColorRGB(255, 255, 255);
+                GotoXY(startX - 2, y);
+                std::cout << " ";
+
+                // Text chính (Màu Đen)
+                SetColorRGB(0, 0, 0);
+                GotoXY(startX, y);
+                std::cout << text;
+
+                // Xóa bông tuyết phải (In dấu cách màu TRẮNG)
+                SetColorRGB(255, 255, 255);
+                GotoXY(startX + text.length() + 1, y);
+                std::cout << " ";
+            }
         }
 
-        SetColorRGB(255, 100, 180);
-        GotoXY(startX, startY + selectedOption);
-        std::string selectedText;
-        if (selectedOption == 0) selectedText = ">> Save to New File";
-        else if (selectedOption == 1) selectedText = ">> Overwrite Existing Save";
-        else if (selectedOption == 2) selectedText = ">> Back";
-        std::cout << std::left << std::setw(MENU_WIDTH) << selectedText;
-
+        // Xử lý phím bấm
         char key = toupper(_getch());
-        if (key == 'W') { selectedOption = (selectedOption - 1 + totalOptions) % totalOptions; }
-        else if (key == 'S') { selectedOption = (selectedOption + 1) % totalOptions; } // SỬA LỖI: selected -> selectedOption
-        else if (key == 13) {
+        if (key == 'W') {
+            selectedOption = (selectedOption - 1 + totalOptions) % totalOptions;
+        }
+        else if (key == 'S') {
+            selectedOption = (selectedOption + 1) % totalOptions;
+        }
+        else if (key == 13) { // Enter
             switch (selectedOption) {
             case 0: ShowNewSaveScreen(); break;
             case 1: ShowOverwriteScreen(); break;
-            case 2: ResetColor(); return;
+            case 2: ResetColor(); return; // Thoát hàm
             }
+            // Sau khi quay lại từ các màn hình con, cần xóa màn hình vẽ lại
             ClearScreenWithColor(255, 255, 255);
+            // Vẽ lại title vì màn hình đã bị xóa
+            for (int i = 0; i < lines; i++) {
+                SetColorRGB(0, 0, 0);
+                GotoXY(50, 1 + i);
+                std::cout << title[i];
+            }
         }
     }
 }
@@ -355,26 +416,60 @@ void ShowSaveGameScreen() {
  Hiển thị màn hình cho phép người dùng nhập tên file save mới.
  */
 void ShowNewSaveScreen() {
+    // 1. Chuẩn bị màn hình
     ClearScreenWithColor(255, 255, 255);
     SetColorRGB(0, 0, 0);
+
     const int contentWidth = 25;
     const int startX = (CONSOLE_WIDTH - contentWidth) / 2;
     const int startY = (CONSOLE_HEIGHT / 2) - 2;
 
-    GotoXY(startX, startY);     std::cout << "Enter save name:";
+    // 2. Vẽ giao diện
+    GotoXY(startX, startY);      std::cout << "Enter save name:";
     GotoXY(startX, startY + 1); std::cout << "(Less than 20 characters)";
+
+    // Vẽ dòng kẻ nền (20 ký tự)
     GotoXY(startX, startY + 3); std::cout << "____________________";
+
+    // Đưa con trỏ về đầu dòng kẻ để bắt đầu nhập
     GotoXY(startX, startY + 3);
 
     std::string saveName = "";
     char ch;
+
+    // 3. Vòng lặp nhập liệu
     while (true) {
         ch = _getch();
-        if (ch == 13) { if (!saveName.empty()) break; }
-        else if (ch == 27) { ResetColor(); return; }
-        else if (ch == 8) { if (!saveName.empty()) { saveName.pop_back(); std::cout << "\b \b"; } }
-        else if (saveName.length() < 20 && isalnum(ch)) { saveName += ch; std::cout << ch; }
+
+        // --- XỬ LÝ ENTER (Xác nhận) ---
+        if (ch == 13) {
+            if (!saveName.empty()) break;
+        }
+        // --- XỬ LÝ ESC (Hủy) ---
+        else if (ch == 27) {
+            ResetColor();
+            return;
+        }
+        // --- XỬ LÝ BACKSPACE (Xóa) - ĐÃ SỬA ---
+        else if (ch == 8) {
+            if (!saveName.empty()) {
+                saveName.pop_back(); // Xóa ký tự trong biến string
+
+                // Kỹ thuật sửa lỗi hiển thị:
+                // \b : Lùi con trỏ về vị trí ký tự muốn xóa
+                // _  : In dấu gạch chân đè lên ký tự đó (khôi phục nền)
+                // \b : Lùi con trỏ lại lần nữa để sẵn sàng nhập ký tự mới
+                std::cout << "\b_\b";
+            }
+        }
+        // --- XỬ LÝ KÝ TỰ THƯỜNG (Nhập) ---
+        else if (saveName.length() < 20 && isalnum(ch)) {
+            saveName += ch;
+            std::cout << ch;
+        }
     }
+
+    // 4. Lưu game
     PerformSave(saveName + ".txt");
 }
 
