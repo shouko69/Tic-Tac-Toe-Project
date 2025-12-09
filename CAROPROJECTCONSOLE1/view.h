@@ -41,7 +41,6 @@ struct DrawInstructionTrueColor {
 
 // 3. KHAI BÁO HÀM (FUNCTION PROTOTYPES)
 
-
 // --- Nhóm Hệ Thống (System & Utils) ---
 bool SetConsoleFont(LPCWSTR fontName, SHORT sizeX, SHORT sizeY); /*fontName: Đặt tên font muốn dùng (ví dụ: L"Consolas", L"Terminal"...), sizeX, sizeY: 
 Đặt chiều rộng và chiều cao(pixel) cho một ký tự.*/
@@ -59,9 +58,9 @@ void DrawImageHalfBlock(int startX, int startY, const std::vector<DrawInstructio
 // --- Nhóm Intro & Menu ---
 void ShowGroupIntro(); // Intro Group6
 void StartIntro(); // Intro có Loading bar
-void DrawFancyBox(int x, int y, int width, std::string text, bool isSelected);
+
 void DrawFullMenu(int selected_index); // vẽ tất cả những j có ở menu chính
-void DrawMenuItem(int index, bool is_selected); // vẽ các nút chọn chức năng menu
+void DrawMenuItem(int index, bool is_selected);
 void DrawFullNewGameMenu(int selected_index); // vẽ tất cả những j có ở menu mode khi bấm play
 void DrawNewGameMenuItem(int index, bool is_selected); // vẽ các nút chọn chức năng của mode 
 void StartAbout();
@@ -78,11 +77,16 @@ void DrawFrame1(int x, int y, int width, int height);
 void DrawBoard(int pSize);
 void RedrawBoardState(); // Vẽ lại X/O trên bàn cờ
 void GotoBoard(int pX, int pY); // Nhảy đến tâm ô cờ để đặt con trỏ
-void DrawGameUI(); // Vẽ toàn bộ giao diện trong game (Nền, Bàn cờ, UI tĩnh, UI động)
+void DrawGameUI_2P(); // Vẽ toàn bộ giao diện trong game (Nền, Bàn cờ, UI tĩnh, UI động)
 void DrawStatic2P_UI(); // Vẽ khung tên, điểm (Chạy 1 lần)
 void UpdateDynamic2P_UI(); // Cập nhật điểm số, lượt đi (Chạy liên tục)
-
+void DrawBigArt_Color(int x, int y, const std::vector<std::string>& art, int r, int g, int b);
 // --- Nhóm Pause & Kết thúc ---
 void DrawFullPauseMenu(int selected_index); // vẽ tất cả những j có trên màn hình pause
 void DrawPauseMenuItem(int index, bool is_selected); // các lựa chọn của menu pause
 void DrawGameOverScreen(int selectedOption, bool drawAll); // Màn hình hiển thị kết quả
+// --- WIn effect ---
+void ShowChristmasResult_ASCII(int winner);
+//
+void PrintCenteredText(std::string text, int boxWidth);
+void DrawTimerOnly();

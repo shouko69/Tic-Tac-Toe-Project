@@ -18,6 +18,7 @@
 #include <map>
 #include "SaveLoadUI.h"
 
+
 using namespace std;
 
 // --- CÁC BIẾN TOÀN CỤC TỪ FILE KHÁC ---
@@ -60,7 +61,7 @@ std::string GetRandomName() {
 
 void StartGame() {
     // Dọn dẹp và reset dữ liệu
-    ClearScreenWithColor(89, 79, 175);
+    ClearScreenWithColor(97, 100, 151);
     SetColorRGB(255, 255, 255);
     ResetData();
 
@@ -71,9 +72,10 @@ void StartGame() {
     _TURN = true;
     _X = 0;
     _Y = 0;
-
+    _turnTimer = 120;           // Gán 120 giây
+    _lastTimeCheck = time(0);   // Lấy giờ hiện tại
     // Vẽ giao diện
-    DrawGameUI();
+    DrawGameUI_2P();
     GotoBoard(_X, _Y);
     SetCursorVisible(true);
 }
@@ -84,7 +86,7 @@ void ExitGame() {
 }
 
 // 3. ĐIỀU KHIỂN DI CHUYỂN 
-=
+
 void MoveRight() {
     if (_X < BOARD_SIZE - 1) {
         _X++;
@@ -201,14 +203,43 @@ bool Handle2PlayerNameInput() {
     int activeControl = 0;
     char p1_buffer[MAX_NAME_LEN] = "";
     char p2_buffer[MAX_NAME_LEN] = "";
+
+    // Tọa độ khớp với hàm Update ở trên
+    const int INPUT_P1_X = 51;
+    const int INPUT_P1_Y = 26;
+    const int INPUT_P2_X = 104;
+    const int INPUT_P2_Y = 26;
+
     DrawFull2PlayerNameScreen();
 
     while (true) {
+        // 1. TẮT CON TRỎ KHI ĐANG VẼ ĐỂ KHÔNG BỊ NHÁY LINH TINH
+        SetCursorVisible(false);
+
+        // 2. CẬP NHẬT GIAO DIỆN
         Update2PlayerNameScreen(activeControl, p1_buffer, p2_buffer);
+
+        // 3. ĐƯA CON TRỎ VỀ ĐÚNG VỊ TRÍ
+        if (activeControl == 0) {
+            GotoXY(INPUT_P1_X + strlen(p1_buffer), INPUT_P1_Y);
+            SetCursorVisible(true); // Chỉ bật lại khi đã vào đúng chỗ
+        }
+        else if (activeControl == 1) {
+            GotoXY(INPUT_P2_X + strlen(p2_buffer), INPUT_P2_Y);
+            SetCursorVisible(true);
+        }
+        else {
+            // Đang chọn nút Back thì vẫn tắt con trỏ
+            SetCursorVisible(false);
+        }
+
+        // 4. NHẬP PHÍM
         int key = _getch();
 
-        if (key == 27) return false; // ESC
-        if (key == 9) { // TAB
+        if (key == 27) { SetCursorVisible(false); return false; } // ESC
+
+        // TAB để chuyển đổi qua lại
+        if (key == 9) {
             activeControl = (activeControl + 1) % 3;
             continue;
         }
@@ -224,7 +255,7 @@ bool Handle2PlayerNameInput() {
             }
             else if (key == 13) { // Enter
                 if (strlen(p1_buffer) == 0) strcpy_s(p1_buffer, MAX_NAME_LEN, GetRandomName().c_str());
-                activeControl = 1;
+                activeControl = 1; // Chuyển sang P2
             }
             break;
 
@@ -235,75 +266,152 @@ bool Handle2PlayerNameInput() {
             }
             else if (key == 8) { // Backspace
                 if (strlen(p2_buffer) > 0) p2_buffer[strlen(p2_buffer) - 1] = '\0';
-                else activeControl = 0;
+                else activeControl = 0; // Xóa hết quay về P1
             }
             else if (key == 13) { // Enter
                 if (strlen(p2_buffer) == 0) strcpy_s(p2_buffer, MAX_NAME_LEN, GetRandomName().c_str());
+
+                // Kiểm tra nếu cả 2 đã có tên
                 if (strlen(p1_buffer) > 0) {
                     strcpy_s(_player1_name, MAX_NAME_LEN, p1_buffer);
                     strcpy_s(_player2_name, MAX_NAME_LEN, p2_buffer);
+                    SetCursorVisible(false);
                     return true;
                 }
             }
             break;
 
-        case 2: // Nút BACK
-            if (key == 13) return false;
+        case 2: // Back Button
+            if (key == 13) { SetCursorVisible(false); return false; }
             break;
         }
     }
 }
 void Handle2PlayerGame() {
+
+    // 1. Khởi đầu: Đưa con trỏ về bàn cờ và bật lên
+    // (Thêm dòng này để đảm bảo timer chạy đúng ngay khi vào game)
+    _lastTimeCheck = time(0);
+
     GotoBoard(_X, _Y);
-    int key = _getch();
+    SetCursorVisible(true);
 
-    if (key == 0 || key == 224) key = _getch();
-    else key = toupper(key);
+    while (true) {
 
-    if (key == 27) { // ESC -> Pause
-        currentState = PAUSE;
-        return;
-    }
+        // --- A. LOGIC ĐẾM GIỜ (KHI KHÔNG BẤM PHÍM) ---
+        while (!_kbhit()) {
+            time_t now = time(0);
 
-    bool validAction = false;
+            // Mỗi giây trôi qua
+            if (now != _lastTimeCheck) {
+                _turnTimer--;
+                _lastTimeCheck = now;
 
-    // --- PHÂN QUYỀN NGƯỜI CHƠI ---
-    if (_currentPlayer == 1) {
-        if (key == 'W') MoveUp();
-        else if (key == 'S') MoveDown();
-        else if (key == 'A') MoveLeft();
-        else if (key == 'D') MoveRight();
-        else if (key == 'F' || key == 32) validAction = true; // Space/F để đánh
-    }
-    else if (_currentPlayer == 2) {
-        if (key == 72) MoveUp();
-        else if (key == 80) MoveDown();
-        else if (key == 75) MoveLeft();
-        else if (key == 77) MoveRight();
-        else if (key == 13) validAction = true; // Enter để đánh
-    }
+                // --- [THAY ĐỔI DUY NHẤT Ở ĐÂY] ---
+                SetCursorVisible(false); // Tắt con trỏ
 
-    // --- XỬ LÝ NƯỚC ĐI ---
-    if (validAction) {
-        if (CheckBoard(_X, _Y) != 0) { // Nếu ô trống
-            _moveCount++;
+                // Thay vì UpdateDynamic2P_UI() (vẽ lại hết gây lag)
+                // Ta gọi hàm chỉ vẽ số giây:
+                DrawTimerOnly();
 
-            if (_currentPlayer == 1) DrawXmini(_X, _Y);
-            else DrawOmini(_X, _Y);
+                // Đưa con trỏ về lại đúng ô cờ
+                GotoBoard(_X, _Y);
 
-            // Kiểm tra thắng thua
-            int status = TestBoard();
-            if (status != 2) { // Có kết quả (Thắng hoặc Hòa)
-                if (status == -1) { _gameWinner = 1; _player1_score++; }
-                else if (status == 1) { _gameWinner = 2; _player2_score++; }
-                else { _gameWinner = 0; }
-
-                currentState = GAME_OVER;
+                // Bật đèn lên
+                SetCursorVisible(true);
+                // ---------------------------------
             }
-            else { // Chưa có kết quả -> Đổi lượt
-                _currentPlayer = (_currentPlayer == 1) ? 2 : 1;
-                _TURN = !_TURN;
-                UpdateDynamic2P_UI();
+
+            // Hết giờ
+            if (_turnTimer <= 0) {
+                _gameWinner = (_currentPlayer == 1) ? 2 : 1;
+                SetCursorVisible(false); // Game over mới được tắt
+                ShowChristmasResult_ASCII(_gameWinner);
+                currentState = GAME_OVER;
+                return;
+            }
+
+            Sleep(100); // Ngủ nhẹ để giảm tải CPU
+        }
+
+        // --- B. LOGIC XỬ LÝ PHÍM (GIỮ NGUYÊN TOÀN BỘ) ---
+        int key = _getch();
+
+        if (key == 0 || key == 224) key = _getch(); // Bắt mã phím mũi tên
+        else key = toupper(key);
+
+        // ESC -> Pause
+        if (key == 27) {
+            currentState = PAUSE;
+            return;
+        }
+
+        bool validAction = false;
+        int oldX = _X; // Lưu tọa độ cũ
+        int oldY = _Y;
+
+        // Điều khiển
+        if (_currentPlayer == 1) {
+            if (key == 'W') MoveUp();
+            else if (key == 'S') MoveDown();
+            else if (key == 'A') MoveLeft();
+            else if (key == 'D') MoveRight();
+            else if (key == 'F' || key == 32) validAction = true;
+        }
+        else {
+            if (key == 72) MoveUp();
+            else if (key == 80) MoveDown();
+            else if (key == 75) MoveLeft();
+            else if (key == 77) MoveRight();
+            else if (key == 13) validAction = true;
+        }
+
+        // Nếu có di chuyển -> Cập nhật vị trí con trỏ
+        if (_X != oldX || _Y != oldY) {
+            GotoBoard(_X, _Y);
+        }
+
+        // --- C. XỬ LÝ ĐÁNH CỜ (GIỮ NGUYÊN) ---
+        if (validAction) {
+            if (CheckBoard(_X, _Y) != 0) { // Nếu ô trống
+                _moveCount++;
+
+                SetCursorVisible(false); // Tắt con trỏ lúc vẽ hình X/O
+
+                // Vẽ quân cờ
+                int drawX = LEFT + _X * CELL_VISUAL_WIDTH; // (Lưu ý: Đảm bảo CELL_VISUAL_WIDTH khớp macro của bạn)
+                int drawY = TOP + _Y * CELL_VISUAL_HEIGHT;
+
+                if (_currentPlayer == 1) DrawXmini(drawX + 2, drawY + 1);
+                else DrawOmini(drawX + 2, drawY + 1);
+
+                // Kiểm tra thắng thua
+                int status = TestBoard();
+
+                if (status != 2) { // Có kết quả (Thắng/Thua/Hòa)
+                    if (status == -1) { _gameWinner = 1; _player1_score++; }
+                    else if (status == 1) { _gameWinner = 2; _player2_score++; }
+                    else { _gameWinner = 0; }
+                    _round++;
+
+                    ShowChristmasResult_ASCII(_gameWinner);
+                    currentState = GAME_OVER;
+                    return;
+                }
+                else { // Đổi lượt
+                    _turnTimer = 120; // Reset giờ
+                    _lastTimeCheck = time(0);
+                    _currentPlayer = (_currentPlayer == 1) ? 2 : 1;
+                    _TURN = !_TURN;
+
+                    // Vẽ lại giao diện FULL (Chỉ vẽ lại full khi đổi lượt để đổi màu X/O to)
+                    // Ở đây vẫn dùng UpdateDynamic2P_UI là ĐÚNG
+                    UpdateDynamic2P_UI();
+
+                    // Trả con trỏ về và BẬT lại
+                    GotoBoard(_X, _Y);
+                    SetCursorVisible(true);
+                }
             }
         }
     }
@@ -378,6 +486,9 @@ void RunNewGameModeState() {
         currentState = MENU;
         break;
     case 1: // 2 Players
+        _player1_score = 0;
+        _player2_score = 0;
+        _round = 1;
         currentState = PLAYER_NAME_INPUT;
         break;
     case 2: // Back
@@ -410,6 +521,7 @@ void RunGameOverState() {
     case 2:
         _player1_score = 0;
         _player2_score = 0;
+        _round = 1;
         currentState = MENU;
         break;
     }
@@ -419,9 +531,10 @@ void RunPauseState() {
     int pauseChoice = HandlePauseMenuInput();
     switch (pauseChoice) {
     case 0: // Resume
-        DrawGameUI();
+        DrawGameUI_2P();
         DrawBoard(BOARD_SIZE);
         RedrawBoardState();
+        
         SetCursorVisible(true);
         currentState = PLAY_2P;
         break;
@@ -453,9 +566,9 @@ void RunLoadState() {
     ResetData();
     bool loadSuccess = ShowLoadGameScreen();
     if (loadSuccess) {
-        ClearScreenWithColor(89, 79, 175);
+        ClearScreenWithColor(97, 100, 151);
         SetColorRGB(0, 0, 0);
-        DrawGameUI();
+        DrawGameUI_2P();
 
         int status = TestBoard();
         if (status != 2) { // Game đã kết thúc

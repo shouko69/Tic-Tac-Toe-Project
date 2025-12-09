@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <vector>
 #include <string>
+#include "view.h"
 extern int _X, _Y; //toa do hien hanh tren ban co
 extern int _COMMAND; // bien nhan gia tri phim nguoi dung
 #define ESCAPE_KEY -2

@@ -22,7 +22,8 @@ bool SaveGameToFile(const GameStateData& data, const std::string& filename) {
     file << data.p2Score << std::endl;
     file << data.moveCount << std::endl;
     // ---------------------------------------
-
+    file << data.timeLeft << std::endl;
+    file << data.round << std::endl;
     // 2. Ghi bàn cờ (Giữ nguyên)
     for (int i = 0; i < BOARD_SIZE; ++i) {
         for (int j = 0; j < BOARD_SIZE; ++j) {
@@ -59,7 +60,8 @@ bool LoadGameFromFile(GameStateData& data, const std::string& filename) {
     file >> data.p2Score;
     file >> data.moveCount;
     // ------------------------------------
-
+    file >> data.timeLeft;
+    file >> data.round;
     // 2. Đọc bàn cờ
     for (int i = 0; i < BOARD_SIZE; ++i) {
         for (int j = 0; j < BOARD_SIZE; ++j) {

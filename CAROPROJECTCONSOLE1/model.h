@@ -1,5 +1,5 @@
 ﻿#pragma once
-
+#include <ctime>
 #include "GameState.h"
 // lưu độ dài của các chữ cho chức năng 
 #define MAX_NAME_LEN 21    // <= 20 ký tự + '\0'
@@ -30,8 +30,11 @@ struct GameStateData {
     int p1Score;               // Điểm P1
     int p2Score;               // Điểm P2
     int moveCount;             // Số lượt đi
-    // ---------------------------------------
+    int timeLeft;
+    int round;
 
+    // ---------------------------------------
+    
     // --- Metadata cũ (GIỮ NGUYÊN) ---
     char name[MAX_NAME_LEN];
     char date[MAX_DATE_LEN];
@@ -44,6 +47,9 @@ extern int _moveCount;     // Dùng cho MOVES
 extern int _currentPlayer; // 1 hoặc 2, để xác định lượt đi
 extern char _player1_name[];
 extern char _player2_name[];
+extern int _turnTimer;       // 120 giây = 2 phút
+extern int _round;
+extern time_t _lastTimeCheck;  // Lưu mốc thời gian thực để tính giây trôi qua
 // 0 = chưa có, 1 = P1(X) thắng, 2 = P2(O) thắng, -1 = Hòa
 extern int _gameWinner;
 void ResetData();

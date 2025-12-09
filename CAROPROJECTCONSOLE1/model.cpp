@@ -12,7 +12,9 @@ int _player2_score; // Dùng cho WINS
 int _moveCount;     // Dùng cho MOVES
 int _currentPlayer;
 int _gameWinner;
-
+int _turnTimer = 120;       // 120 giây = 2 phút
+time_t _lastTimeCheck = 0;  // Lưu mốc thời gian thực để tính giây trôi qua
+int _round = 1;
 void ResetData() {
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {
