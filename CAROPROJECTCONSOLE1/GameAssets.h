@@ -38,3 +38,7 @@ void DrawBackloadframe(int x, int y); // backloadframe.png
 void DrawBackloadframe1(int x, int y); // backloadframe1.png
 void DrawLoadframe1(int x, int y); // loadframe1.png
 void DrawSaveframe1(int x, int y); // saveframe1.png
+void DrawGuidebackground(int x, int y); // guidebackground.png
+void DrawAboutbackground(int x, int y); // aboutbackground.png
+void DrawGroup6(int x, int y); // Group6.png
+void DrawLoading(int x, int y); // Loading.png

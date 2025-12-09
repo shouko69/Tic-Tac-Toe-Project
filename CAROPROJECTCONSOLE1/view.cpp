@@ -233,72 +233,33 @@ int CenterXW(std::wstring s) {
     return (CONSOLE_WIDTH - s.length()) / 2;
 }
 void ShowGroupIntro() {
-    ClearScreenWithColor(202, 196, 248);
-    SetColorRGB(100, 0, 150);
+    ClearScreenWithColor(97, 100, 151);
+    
+    DrawGroup6(37, 5);
+    
 
-    const char* text[] = {
-        " ██████╗ ██████╗  ██████╗ ██╗   ██╗██████╗         ██████╗ ",
-        "██╔════╝ ██╔══██╗██╔═══██╗██║   ██║██╔══██╗       ██╔════╝ ",
-        "██║  ███╗██████╔╝██║   ██║██║   ██║██████╔╝       ███████╗ ",
-        "██║   ██║██╔══██╗██║   ██║██║   ██║██╔═══╝        ██╔═══██╗",
-        "╚██████╔╝██║  ██║╚██████╔╝╚██████╔╝██║            ╚██████╔╝",
-        " ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝             ╚═════╝ "
-    };
-
-    int lines = 6;
-    int textWidth = 67;
-
-   
-
-    // --- CHỈNH SỬA TẠI ĐÂY ---
-    // Bạn hãy thay đổi số 20 này:
-    // Tăng lên (ví dụ 30, 40) để dịch sang PHẢI
-    // Giảm xuống (hoặc số âm) để dịch sang TRÁI
-    int SHIFT_RIGHT = 7;
-
-    int x = (CONSOLE_WIDTH - textWidth) / 2 + SHIFT_RIGHT;
-    int y = 17;
-
-    for (int i = 0; i < lines; i++) {
-        GotoXY(x, y + i);
-        std::cout << text[i];
-    }
-
-    Sleep(2000);
+    Sleep(5000);
 }
 void StartIntro() {
     // Xóa màn hình ở chế độ thường trước
-    ClearScreenWithColor(202, 196, 248);
+    ClearScreenWithColor(255, 255 ,255);
+    DrawLoading(0, 0);
 
     // === BẮT ĐẦU CHẾ ĐỘ UNICODE (VÙNG CẤM DÙNG COUT) ===
     _setmode(_fileno(stdout), _O_U16TEXT);
 
     // Set màu nền Lavender & Chữ Tím (Dùng hàm W)
-    SetBgW(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B);
-    SetColorW(LOGO_R, LOGO_G, LOGO_B);
+    SetBgW(97, 100, 151);
+    SetColorW(255, 255, 255);
 
-    // Vẽ Logo
-    int logoY = 5;
-    std::wstring logo[] = {
-        L"████████╗██╗  ██╗███████╗    ██████╗  █████╗ ██████╗  ██████╗      ██████╗  █████╗ ███╗   ███╗███████╗",
-        L"╚══██╔══╝██║  ██║██╔════╝   ██╔════╝ ██╔══██╗██╔══██╗██╔═══██╗    ██╔════╝ ██╔══██╗████╗ ████║██╔════╝",
-        L"   ██║   ███████║█████╗     ██║      ███████║██████╔╝██║   ██║    ██║  ███╗███████║██╔████╔██║█████╗  ",
-        L"   ██║   ██╔══██║██╔══╝     ██║      ██╔══██║██╔══██╗██║   ██║    ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝  ",
-        L"   ██║   ██║  ██║███████╗   ╚██████╗ ██║  ██║██║  ██║╚██████╔╝    ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗",
-        L"   ╚═╝   ╚═╝  ╚═╝╚══════╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝"
-    };
-
-    for (int i = 0; i < 6; i++) {
-        GotoXY(CenterXW(logo[i]), logoY + i);
-        std::wcout << logo[i];
-    }
+    
 
     // Loading Bar
     int barWidth = 60;
     int barY = 20;
     int barX = (CONSOLE_WIDTH - barWidth) / 2;
 
-    SetColorW(80, 80, 80); // Dùng hàm W
+    SetColorW(255, 255, 255); // Dùng hàm W
     GotoXY(barX - 1, barY - 1); std::wcout << L"╔" << std::wstring(barWidth, L'═') << L"╗";
     GotoXY(barX - 1, barY);     std::wcout << L"║";
     GotoXY(barX + barWidth, barY); std::wcout << L"║";
@@ -318,7 +279,7 @@ void StartIntro() {
 
         // Nếu muốn reset màu ở đây thì phải dùng ResetColorW()
         // Nhưng ở đây ta set đè màu luôn nên k cần reset
-        SetBgW(97, 100, 151); SetColorW(80, 80, 80);
+        SetBgW(97, 100, 151); SetColorW(255, 255 ,255);
 
         std::wstring perStr = std::to_wstring(percent) + L"%";
         GotoXY(CenterXW(perStr), barY + 2);
@@ -430,25 +391,12 @@ void horizontalLine(int X, int Y, int width, int height) {
 void StartAbout() {
     GabageCollect(); 
     ClearScreenWithColor(202, 196, 248);
+    DrawAboutbackground(0, 0);
     _setmode(_fileno(stdout), _O_U16TEXT);
     // Set màu nền Lavender & Chữ Tím (Dùng hàm W)
-    SetBgW(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B);
-    SetColorW(LOGO_R, LOGO_G, LOGO_B);
-    DrawFrame(2, 1, 162, 53);
-    int aboutLogoY = 5;
-    std::wstring aboutLogo[] = {
-        L" █████╗ ██████╗  ██████╗ ██╗   ██╗████████╗",
-        L"██╔══██╗██╔══██╗██╔═══██╗██║   ██║╚══██╔══╝",
-        L"███████║██████╔╝██║   ██║██║   ██║   ██║   ",
-        L"██╔══██║██╔══██╗██║   ██║██║   ██║   ██║   ",
-        L"██║  ██║██████╔╝╚██████╔╝╚██████╔╝   ██║   ",
-        L"╚═╝  ╚═╝╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   "
-    };
-
-    for (int i = 0; i < 6; i++) {
-        GotoXY(CenterXW(aboutLogo[i]), aboutLogoY + i);
-        std::wcout << aboutLogo[i];
-    }
+    SetBgW(255, 255, 209);
+    SetColorW(0, 0, 0);
+   
 
     COORD tableCoord{ 40, 10 };
     int i = 0, offset = 2;
@@ -466,11 +414,11 @@ void StartAbout() {
     };
     for (int i = 0; i < 7; i++) {
         if (i == 0) {
-            GotoXY(tableCoord.X + 10, tableCoord.Y + 3);
+            GotoXY(tableCoord.X + 14, tableCoord.Y + 5);
             std::wcout << inforLogo[i];
         }
         else {
-            GotoXY(45, inforLogoY + i * offset);
+            GotoXY(45, (inforLogoY + i * offset) + 2);
             std::wcout << inforLogo[i];
         } 
     }
@@ -478,7 +426,7 @@ void StartAbout() {
     _setmode(_fileno(stdout), _O_TEXT);
 
     const char* guide = "'ESC': quit";
-    GotoXY(CenterX(guide), 50);
+    GotoXY(CenterX(guide) + 3, 51);
     std::cout << guide;
 
     // Vòng chờ phím bấm
@@ -501,27 +449,16 @@ void StartAbout() {
 }
 void StartGuide() {
     GabageCollect();
-    ClearScreenWithColor(202, 196, 248);
+    ClearScreenWithColor(97, 100, 151);
+    DrawGuidebackground(0, 0);
+    
     _setmode(_fileno(stdout), _O_U16TEXT);
     // Set màu nền Lavender & Chữ Tím (Dùng hàm W)
-    SetBgW(BG_PURPLE_R, BG_PURPLE_G, BG_PURPLE_B);
-    SetColorW(LOGO_R, LOGO_G, LOGO_B);
-    DrawFrame(2, 1, 162, 53);
+    SetBgW(255, 255, 209);
+    SetColorW(0, 0, 0);
+    
     int X = 26, Y = 15;
-    DrawFrame1(X - 1, Y - 1, 117, 32);
-    int guideLogoY = 5;
-    std::wstring guideLogo[] = {
-        L" ██████╗ ██╗   ██╗██╗██████╗ ███████╗",
-        L"██╔════╝ ██║   ██║██║██╔══██╗██╔════╝",
-        L"██║  ███╗██║   ██║██║██║  ██║███████╗",
-        L"██║   ██║██║   ██║██║██║  ██║██╔════╝",
-        L"╚██████╔╝╚██████╔╝██║██████╔╝███████╗",
-        L" ╚═════╝  ╚═════╝ ╚═╝╚═════╝ ╚══════╝"
-    };
-    for (int i = 0; i < 6; i++) {
-        GotoXY(CenterXW(guideLogo[i]), guideLogoY + i);
-        std::wcout << guideLogo[i];
-    }
+    
     GotoXY(X + 38, Y + 1);
     std::wcout << L"Game features and in-game operations: ";
     // Vẽ vạch ngang
@@ -575,7 +512,7 @@ void StartGuide() {
     // Trả chế độ xuất về bình thường (O_TEXT)
     _setmode(_fileno(stdout), _O_TEXT);
     const char* guide = "'ESC': quit";
-    GotoXY(CenterX(guide), 50);
+    GotoXY(CenterX(guide) + 3, 51);
     std::cout << guide;
 
     // Vòng chờ phím bấm
