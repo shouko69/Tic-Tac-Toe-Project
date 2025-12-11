@@ -40,5 +40,5 @@ void DrawLoadframe1(int x, int y); // loadframe1.png
 void DrawSaveframe1(int x, int y); // saveframe1.png
 void DrawGuidebackground(int x, int y); // guidebackground.png
 void DrawAboutbackground(int x, int y); // aboutbackground.png
-void DrawGroup6(int x, int y); // Group6.png
+void DrawGroup6(int x, int y, float brightness = 1.0f);
 void DrawLoading(int x, int y); // Loading.png

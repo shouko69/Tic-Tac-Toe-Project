@@ -4,34 +4,38 @@
 #include "GameState.h"
 #include "GameAssets.h"
 #include "truecolor_utils.h"
+#include "SaveLoad.h"
+#include "SaveLoadUI.h"
 #include <Windows.h>
 #include <conio.h>
-#include <io.h>
-#include <fcntl.h>
 #include <string>
-#include <string.h>
-#include <iostream>
 #include <vector>
 #include <random>
 #include <ctime>
 #include <ctype.h>
 #include <map>
-#include "SaveLoadUI.h"
-
 
 using namespace std;
 
-// --- CÁC BIẾN TOÀN CỤC TỪ FILE KHÁC ---
 extern const int TOTAL_ITEMS;
 extern const int TOTAL_PAUSE_ITEMS;
 extern const int TOTAL_NEW_GAME_OPTIONS;
 
-// 1. HÀM HỆ THỐNG & TIỆN ÍCH
+GameState currentState = MENU;
+
+typedef void (*StateFunc)();
+
+void ClearInputBuffer() {
+    while (_kbhit()) {
+        _getch();
+    }
+}
 
 void InitConsole() {
-    system("chcp 65001"); // Thiết lập mã hóa UTF-8
+    system("chcp 65001");
     SetCursorVisible(false);
 }
+
 void SetCursorVisible(bool visible) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO cursorInfo;
@@ -40,9 +44,23 @@ void SetCursorVisible(bool visible) {
         SetConsoleCursorInfo(hConsole, &cursorInfo);
     }
 }
+
 void ShowCursorForBoard() {
     SetCursorVisible(true);
 }
+
+void ShowComingSoonPopup() {
+    ClearScreenWithColor(30, 30, 30);
+    SetColorRGB(255, 255, 255);
+    GotoXY(65, 22); cout << "==================================";
+    GotoXY(65, 23); cout << "    TINH NANG DANG PHAT TRIEN     ";
+    GotoXY(65, 24); cout << "          (COMING SOON)           ";
+    GotoXY(65, 25); cout << "==================================";
+    GotoXY(65, 28); cout << ">> Nhan phim bat ky de quay lai <<";
+    ClearInputBuffer();
+    _getch();
+}
+
 std::string GetRandomName() {
     static const std::vector<std::string> RANDOM_NAMES = {
         "ShadowStriker", "CyberNinja", "PixelAvenger", "GigaWizard",
@@ -50,88 +68,50 @@ std::string GetRandomName() {
         "Phoenix", "Titan", "RogueAI", "Helios", "Nemesis",
         "Vortex", "GalacticHero", "NightRider", "Blaze"
     };
-
     static std::mt19937 rng(static_cast<unsigned int>(time(0)));
     std::uniform_int_distribution<int> dist(0, RANDOM_NAMES.size() - 1);
-
     return RANDOM_NAMES[dist(rng)];
 }
 
-// 2. QUẢN LÝ TRẠNG THÁI GAME 
-
 void StartGame() {
-    // Dọn dẹp và reset dữ liệu
     ClearScreenWithColor(97, 100, 151);
     SetColorRGB(255, 255, 255);
     ResetData();
 
-    // Thiết lập thông số game mới
     _currentPlayer = 1;
     _moveCount = 0;
     _gameWinner = 0;
     _TURN = true;
-    _X = 0;
-    _Y = 0;
-    _turnTimer = 120;           // Gán 120 giây
-    _lastTimeCheck = time(0);   // Lấy giờ hiện tại
-    // Vẽ giao diện
+    _X = 0; _Y = 0;
+    _turnTimer = 120;
+    _lastTimeCheck = time(0);
+
     DrawGameUI_2P();
     GotoBoard(_X, _Y);
     SetCursorVisible(true);
 }
+
 void ExitGame() {
     ResetColor();
     ClearScreenWithColor(0, 0, 0);
     GabageCollect();
 }
 
-// 3. ĐIỀU KHIỂN DI CHUYỂN 
-
-void MoveRight() {
-    if (_X < BOARD_SIZE - 1) {
-        _X++;
-        GotoBoard(_X, _Y);
-    }
-}
-void MoveLeft() {
-    if (_X > 0) {
-        _X--;
-        GotoBoard(_X, _Y);
-    }
-}
-void MoveDown() {
-    if (_Y < BOARD_SIZE - 1) {
-        _Y++;
-        GotoBoard(_X, _Y);
-    }
-}
-void MoveUp() {
-    if (_Y > 0) {
-        _Y--;
-        GotoBoard(_X, _Y);
-    }
-}
-
-// 4. XỬ LÝ INPUT MENU
+void MoveRight() { if (_X < BOARD_SIZE - 1) { _X++; GotoBoard(_X, _Y); } }
+void MoveLeft() { if (_X > 0) { _X--; GotoBoard(_X, _Y); } }
+void MoveDown() { if (_Y < BOARD_SIZE - 1) { _Y++; GotoBoard(_X, _Y); } }
+void MoveUp() { if (_Y > 0) { _Y--; GotoBoard(_X, _Y); } }
 
 int HandleMainMenuInput() {
-    int selected = 0;
-    int old_selected = 0;
+    ClearInputBuffer();
+    int selected = 0, old_selected = 0;
     DrawFullMenu(selected);
-
     while (true) {
         int key = toupper(_getch());
         old_selected = selected;
-
-        if (key == 'W') {
-            selected = (selected - 1 + TOTAL_ITEMS) % TOTAL_ITEMS;
-        }
-        else if (key == 'S') {
-            selected = (selected + 1) % TOTAL_ITEMS;
-        }
-        else if (key == 13) { // Enter
-            return selected;
-        }
+        if (key == 'W') selected = (selected - 1 + TOTAL_ITEMS) % TOTAL_ITEMS;
+        else if (key == 'S') selected = (selected + 1) % TOTAL_ITEMS;
+        else if (key == 13) return selected;
 
         if (selected != old_selected) {
             DrawMenuItem(old_selected, false);
@@ -139,27 +119,18 @@ int HandleMainMenuInput() {
         }
     }
 }
-int HandlePauseMenuInput() {
-    int selected = 0;
-    int old_selected = 0;
-    DrawFullPauseMenu(selected);
 
+int HandlePauseMenuInput() {
+    ClearInputBuffer();
+    int selected = 0, old_selected = 0;
+    DrawFullPauseMenu(selected);
     while (true) {
         int key = toupper(_getch());
         old_selected = selected;
-
-        if (key == 'W') {
-            selected = (selected - 1 + TOTAL_PAUSE_ITEMS) % TOTAL_PAUSE_ITEMS;
-        }
-        else if (key == 'S') {
-            selected = (selected + 1) % TOTAL_PAUSE_ITEMS;
-        }
-        else if (key == 13) { // Enter
-            return selected;
-        }
-        else if (key == 27) { // ESC -> Resume
-            return 0;
-        }
+        if (key == 'W') selected = (selected - 1 + TOTAL_PAUSE_ITEMS) % TOTAL_PAUSE_ITEMS;
+        else if (key == 'S') selected = (selected + 1) % TOTAL_PAUSE_ITEMS;
+        else if (key == 13) return selected;
+        else if (key == 27) return 0;
 
         if (selected != old_selected) {
             DrawPauseMenuItem(old_selected, false);
@@ -167,28 +138,19 @@ int HandlePauseMenuInput() {
         }
     }
 }
-int HandleNewGameMenuInput() {
-    int selected = 1;
-    int old_selected = selected;
-    DrawFullNewGameMenu(selected);
 
+int HandleNewGameMenuInput() {
+    ClearInputBuffer();
+    int selected = 1, old_selected = 1;
+    DrawFullNewGameMenu(selected);
     while (true) {
         int key = _getch();
         old_selected = selected;
         int upperKey = toupper(key);
-
-        if (upperKey == 'W') {
-            selected = (selected - 1 + TOTAL_NEW_GAME_OPTIONS) % TOTAL_NEW_GAME_OPTIONS;
-        }
-        else if (upperKey == 'S') {
-            selected = (selected + 1) % TOTAL_NEW_GAME_OPTIONS;
-        }
-        else if (key == 13) { // Enter
-            return selected; 
-        }
-        else if (key == 27) { // ESC
-            return ESCAPE_KEY;
-        }
+        if (upperKey == 'W') selected = (selected - 1 + TOTAL_NEW_GAME_OPTIONS) % TOTAL_NEW_GAME_OPTIONS;
+        else if (upperKey == 'S') selected = (selected + 1) % TOTAL_NEW_GAME_OPTIONS;
+        else if (key == 13) return selected;
+        else if (key == 27) return ESCAPE_KEY;
 
         if (selected != old_selected) {
             DrawNewGameMenuItem(old_selected, false);
@@ -197,81 +159,66 @@ int HandleNewGameMenuInput() {
     }
 }
 
-// 5. XỬ LÝ GAMEPLAY & NHẬP LIỆU
+int HandleGameOverScreen() {
+    ClearInputBuffer();
+    int selectedOption = 1;
+    DrawGameOverScreen(selectedOption, true);
+    while (true) {
+        int key = _getch();
+        int old_selected = selectedOption;
+        if (key == 9) selectedOption = (selectedOption + 1) % 3;
+        else if (key == 13 || key == 32) return selectedOption;
+        else if (key == 27) return 2;
+
+        if (selectedOption != old_selected) {
+            DrawGameOverScreen(selectedOption, false);
+        }
+    }
+}
 
 bool Handle2PlayerNameInput() {
+    ClearInputBuffer();
     int activeControl = 0;
     char p1_buffer[MAX_NAME_LEN] = "";
     char p2_buffer[MAX_NAME_LEN] = "";
-
-    // Tọa độ khớp với hàm Update ở trên
-    const int INPUT_P1_X = 51;
-    const int INPUT_P1_Y = 26;
-    const int INPUT_P2_X = 104;
-    const int INPUT_P2_Y = 26;
+    const int INPUT_P1_X = 51, INPUT_P1_Y = 26;
+    const int INPUT_P2_X = 104, INPUT_P2_Y = 26;
 
     DrawFull2PlayerNameScreen();
 
     while (true) {
-        // 1. TẮT CON TRỎ KHI ĐANG VẼ ĐỂ KHÔNG BỊ NHÁY LINH TINH
         SetCursorVisible(false);
-
-        // 2. CẬP NHẬT GIAO DIỆN
         Update2PlayerNameScreen(activeControl, p1_buffer, p2_buffer);
 
-        // 3. ĐƯA CON TRỎ VỀ ĐÚNG VỊ TRÍ
-        if (activeControl == 0) {
-            GotoXY(INPUT_P1_X + strlen(p1_buffer), INPUT_P1_Y);
-            SetCursorVisible(true); // Chỉ bật lại khi đã vào đúng chỗ
-        }
-        else if (activeControl == 1) {
-            GotoXY(INPUT_P2_X + strlen(p2_buffer), INPUT_P2_Y);
-            SetCursorVisible(true);
-        }
-        else {
-            // Đang chọn nút Back thì vẫn tắt con trỏ
-            SetCursorVisible(false);
-        }
+        if (activeControl == 0) { GotoXY(INPUT_P1_X + strlen(p1_buffer), INPUT_P1_Y); SetCursorVisible(true); }
+        else if (activeControl == 1) { GotoXY(INPUT_P2_X + strlen(p2_buffer), INPUT_P2_Y); SetCursorVisible(true); }
+        else SetCursorVisible(false);
 
-        // 4. NHẬP PHÍM
         int key = _getch();
-
-        if (key == 27) { SetCursorVisible(false); return false; } // ESC
-
-        // TAB để chuyển đổi qua lại
-        if (key == 9) {
-            activeControl = (activeControl + 1) % 3;
-            continue;
-        }
+        if (key == 27) { SetCursorVisible(false); return false; }
+        if (key == 9) { activeControl = (activeControl + 1) % 3; continue; }
 
         switch (activeControl) {
-        case 0: // Player 1
+        case 0:
             if (isprint(key) && strlen(p1_buffer) < MAX_NAME_LEN - 1) {
-                size_t len = strlen(p1_buffer);
-                p1_buffer[len] = key; p1_buffer[len + 1] = '\0';
+                size_t len = strlen(p1_buffer); p1_buffer[len] = key; p1_buffer[len + 1] = '\0';
             }
-            else if (key == 8 && strlen(p1_buffer) > 0) { // Backspace
-                p1_buffer[strlen(p1_buffer) - 1] = '\0';
-            }
-            else if (key == 13) { // Enter
+            else if (key == 8 && strlen(p1_buffer) > 0) p1_buffer[strlen(p1_buffer) - 1] = '\0';
+            else if (key == 13) {
                 if (strlen(p1_buffer) == 0) strcpy_s(p1_buffer, MAX_NAME_LEN, GetRandomName().c_str());
-                activeControl = 1; // Chuyển sang P2
+                activeControl = 1;
             }
             break;
-
-        case 1: // Player 2
+        case 1:
             if (isprint(key) && strlen(p2_buffer) < MAX_NAME_LEN - 1) {
-                size_t len = strlen(p2_buffer);
-                p2_buffer[len] = key; p2_buffer[len + 1] = '\0';
+                size_t len = strlen(p2_buffer); p2_buffer[len] = key; p2_buffer[len + 1] = '\0';
             }
-            else if (key == 8) { // Backspace
+            else if (key == 8) {
                 if (strlen(p2_buffer) > 0) p2_buffer[strlen(p2_buffer) - 1] = '\0';
-                else activeControl = 0; // Xóa hết quay về P1
+                else activeControl = 0;
             }
-            else if (key == 13) { // Enter
+            else if (key == 13) {
                 if (strlen(p2_buffer) == 0) strcpy_s(p2_buffer, MAX_NAME_LEN, GetRandomName().c_str());
-
-                // Kiểm tra nếu cả 2 đã có tên
                 if (strlen(p1_buffer) > 0) {
                     strcpy_s(_player1_name, MAX_NAME_LEN, p1_buffer);
                     strcpy_s(_player2_name, MAX_NAME_LEN, p2_buffer);
@@ -280,135 +227,131 @@ bool Handle2PlayerNameInput() {
                 }
             }
             break;
-
-        case 2: // Back Button
+        case 2:
             if (key == 13) { SetCursorVisible(false); return false; }
             break;
         }
     }
 }
+
+void RunIntro() {
+    DrawLoadingScreen();
+    while (true) {
+        if (_kbhit()) { _getch(); break; }
+        DrawPressAnyKeyPrompt(true);  Sleep(500);
+        DrawPressAnyKeyPrompt(false); Sleep(500);
+    }
+}
+
+void RunWinEffect(int winner) {
+    ClearInputBuffer();
+    int colorIdx = 0;
+    while (true) {
+        if (_kbhit()) { _getch(); break; }
+        DrawWinEffectFrame(winner, colorIdx);
+        colorIdx++;
+        Sleep(200);
+    }
+}
+
+void RunAbout() {
+    ClearInputBuffer();
+    DrawAboutScreen();
+    while (true) {
+        if (_kbhit()) {
+            int key = _getch();
+            if (key == 27 || key == 13) break;
+        }
+    }
+}
+
+void RunGuide() {
+    ClearInputBuffer();
+    DrawGuideScreen();
+    while (true) {
+        if (_kbhit()) {
+            int key = _getch();
+            if (key == 27 || key == 13) break;
+        }
+        Sleep(50);
+    }
+}
+
 void Handle2PlayerGame() {
-
-    // 1. Khởi đầu: Đưa con trỏ về bàn cờ và bật lên
-    // (Thêm dòng này để đảm bảo timer chạy đúng ngay khi vào game)
     _lastTimeCheck = time(0);
-
     GotoBoard(_X, _Y);
     SetCursorVisible(true);
 
     while (true) {
-
-        // --- A. LOGIC ĐẾM GIỜ (KHI KHÔNG BẤM PHÍM) ---
         while (!_kbhit()) {
             time_t now = time(0);
-
-            // Mỗi giây trôi qua
             if (now != _lastTimeCheck) {
                 _turnTimer--;
                 _lastTimeCheck = now;
-
-                // --- [THAY ĐỔI DUY NHẤT Ở ĐÂY] ---
-                SetCursorVisible(false); // Tắt con trỏ
-
-                // Thay vì UpdateDynamic2P_UI() (vẽ lại hết gây lag)
-                // Ta gọi hàm chỉ vẽ số giây:
+                SetCursorVisible(false);
                 DrawTimerOnly();
-
-                // Đưa con trỏ về lại đúng ô cờ
                 GotoBoard(_X, _Y);
-
-                // Bật đèn lên
                 SetCursorVisible(true);
-                // ---------------------------------
             }
-
-            // Hết giờ
             if (_turnTimer <= 0) {
                 _gameWinner = (_currentPlayer == 1) ? 2 : 1;
-                SetCursorVisible(false); // Game over mới được tắt
-                ShowChristmasResult_ASCII(_gameWinner);
+                SetCursorVisible(false);
+                RunWinEffect(_gameWinner);
                 currentState = GAME_OVER;
                 return;
             }
-
-            Sleep(100); // Ngủ nhẹ để giảm tải CPU
+            Sleep(100);
         }
 
-        // --- B. LOGIC XỬ LÝ PHÍM (GIỮ NGUYÊN TOÀN BỘ) ---
         int key = _getch();
-
-        if (key == 0 || key == 224) key = _getch(); // Bắt mã phím mũi tên
+        if (key == 0 || key == 224) key = _getch();
         else key = toupper(key);
 
-        // ESC -> Pause
-        if (key == 27) {
-            currentState = PAUSE;
-            return;
-        }
+        if (key == 27) { currentState = PAUSE; return; }
 
         bool validAction = false;
-        int oldX = _X; // Lưu tọa độ cũ
-        int oldY = _Y;
+        int oldX = _X, oldY = _Y;
 
-        // Điều khiển
         if (_currentPlayer == 1) {
-            if (key == 'W') MoveUp();
-            else if (key == 'S') MoveDown();
-            else if (key == 'A') MoveLeft();
-            else if (key == 'D') MoveRight();
-            else if (key == 'F' || key == 32) validAction = true;
+            if (key == 'W') MoveUp(); else if (key == 'S') MoveDown();
+            else if (key == 'A') MoveLeft(); else if (key == 'D') MoveRight();
+            else if (key == 'F') validAction = true;
         }
         else {
-            if (key == 72) MoveUp();
-            else if (key == 80) MoveDown();
-            else if (key == 75) MoveLeft();
-            else if (key == 77) MoveRight();
+            if (key == 72) MoveUp(); else if (key == 80) MoveDown();
+            else if (key == 75) MoveLeft(); else if (key == 77) MoveRight();
             else if (key == 13) validAction = true;
         }
 
-        // Nếu có di chuyển -> Cập nhật vị trí con trỏ
-        if (_X != oldX || _Y != oldY) {
-            GotoBoard(_X, _Y);
-        }
+        if (_X != oldX || _Y != oldY) GotoBoard(_X, _Y);
 
-        // --- C. XỬ LÝ ĐÁNH CỜ (GIỮ NGUYÊN) ---
         if (validAction) {
-            if (CheckBoard(_X, _Y) != 0) { // Nếu ô trống
+            if (CheckBoard(_X, _Y) != 0) {
                 _moveCount++;
+                SetCursorVisible(false);
 
-                SetCursorVisible(false); // Tắt con trỏ lúc vẽ hình X/O
-
-                // Vẽ quân cờ
-                int drawX = LEFT + _X * CELL_VISUAL_WIDTH; // (Lưu ý: Đảm bảo CELL_VISUAL_WIDTH khớp macro của bạn)
+                int drawX = LEFT + _X * CELL_VISUAL_WIDTH;
                 int drawY = TOP + _Y * CELL_VISUAL_HEIGHT;
 
                 if (_currentPlayer == 1) DrawXmini(drawX + 2, drawY + 1);
                 else DrawOmini(drawX + 2, drawY + 1);
 
-                // Kiểm tra thắng thua
                 int status = TestBoard();
-
-                if (status != 2) { // Có kết quả (Thắng/Thua/Hòa)
+                if (status != 2) {
                     if (status == -1) { _gameWinner = 1; _player1_score++; }
                     else if (status == 1) { _gameWinner = 2; _player2_score++; }
                     else { _gameWinner = 0; }
                     _round++;
-
-                    ShowChristmasResult_ASCII(_gameWinner);
+                    RunWinEffect(_gameWinner);
                     currentState = GAME_OVER;
                     return;
                 }
-                else { // Đổi lượt
-                    _turnTimer = 120; // Reset giờ
+                else {
+                    _turnTimer = 120;
                     _lastTimeCheck = time(0);
                     _currentPlayer = (_currentPlayer == 1) ? 2 : 1;
                     _TURN = !_TURN;
-
-                    // Vẽ lại giao diện FULL (Chỉ vẽ lại full khi đổi lượt để đổi màu X/O to)
-                    // Ở đây vẫn dùng UpdateDynamic2P_UI là ĐÚNG
                     UpdateDynamic2P_UI();
-
-                    // Trả con trỏ về và BẬT lại
                     GotoBoard(_X, _Y);
                     SetCursorVisible(true);
                 }
@@ -416,56 +359,159 @@ void Handle2PlayerGame() {
         }
     }
 }
-int HandleGameOverScreen() {
-    int selectedOption = 1;
-    DrawGameOverScreen(selectedOption, true);
+
+void HandleNewSaveInput() {
+    ClearInputBuffer();
+    std::string saveName = "";
+    std::string message = "*Less than 20 characters";
+    bool isSuccess = false;
+
+    SetCursorVisible(false);
+    DrawNewSaveInputScreen(saveName, message, isSuccess, true);
+    SetCursorVisible(true);
 
     while (true) {
-        int key = _getch();
-        int old_selected = selectedOption;
+        char ch = _getch();
 
-        if (key == 9) { // TAB
-            selectedOption = (selectedOption + 1) % 3;
+        SetCursorVisible(false);
+
+        if (ch == 13) {
+            if (saveName.empty()) {
+                SetCursorVisible(true);
+                continue;
+            }
+
+            std::string fileNameFull = saveName + ".txt";
+            if (FileExists("caro_saves\\" + fileNameFull)) {
+                message = "*File's name has existed!";
+            }
+            else {
+                PerformSave(fileNameFull);
+                message = "*Save file successfully";
+                isSuccess = true;
+            }
+
+            DrawNewSaveInputScreen(saveName, message, isSuccess, false);
+
+            if (isSuccess) {
+                SetCursorVisible(false);
+                _getch();
+                return;
+            }
         }
-        else if (key == 13 || key == 32) { // Enter/Space
-            return selectedOption;
+        else if (ch == 27) {
+            SetCursorVisible(false);
+            return;
         }
-        else if (key == 27) { // ESC
-            return 2; // Back
+        else if (ch == 8) {
+            if (!saveName.empty()) {
+                saveName.pop_back();
+                message = "*Less than 20 characters";
+                DrawNewSaveInputScreen(saveName, message, isSuccess, false);
+            }
+        }
+        else if (saveName.length() < 20 && (isalnum(ch) || ch == ' ' || ch == '_')) {
+            saveName += ch;
+            message = "*Less than 20 characters";
+            DrawNewSaveInputScreen(saveName, message, isSuccess, false);
         }
 
-        if (selectedOption != old_selected) {
-            DrawGameOverScreen(selectedOption, false);
+        if (!isSuccess) {
+            SetCursorVisible(true);
         }
     }
 }
 
+bool HandleFileSelection(int mode) {
+    ClearInputBuffer();
+    std::vector<GameStateData> saves = GetSavedGames();
+    if (saves.empty()) {
+        DrawFileSelectionScreen(saves, 0, 0, (mode == 0), true);
+        const char* msg = "No save files found. Press ESC to return...";
+        GotoXY((CONSOLE_WIDTH - strlen(msg)) / 2, CONSOLE_HEIGHT / 2);
+        SetColorRGB(255, 255, 255); std::cout << msg;
 
+        while (_getch() != 27);
+        return false;
+    }
 
-//-----KHAI BÁO BIẾN-----
+    int selected = 0;
+    int old_selected = -1;
+    int viewOffset = 0;
+    int totalSaves = saves.size();
+    int totalOptions = totalSaves + 1;
 
-// --- ĐỊNH NGHĨA BIẾN TOÀN CỤC ---
-GameState currentState = MENU;
-// --- KHAI BÁO KIỂU CON TRỎ HÀM (Cho gọn code) ---
-// Ý nghĩa: StateFunc là kiểu dữ liệu đại diện cho các hàm void k tham số
-typedef void (*StateFunc)();
+    DrawFileSelectionScreen(saves, viewOffset, selected, (mode == 0), true);
 
+    while (true) {
+        if (selected != old_selected) {
+            DrawFileSelectionScreen(saves, viewOffset, selected, (mode == 0), false);
+            old_selected = selected;
+        }
 
-//-----HÀM TIỆN ÍCH-----
+        char key = toupper(_getch());
+        if (key == 27) return false;
 
-void ShowComingSoonPopup() {
-    ClearScreenWithColor(30, 30, 30);
-    SetColorRGB(255, 255, 255);
-    GotoXY(65, 22); std::cout << "==================================";
-    GotoXY(65, 23); std::cout << "    TINH NANG DANG PHAT TRIEN     ";
-    GotoXY(65, 24); std::cout << "          (COMING SOON)           ";
-    GotoXY(65, 25); std::cout << "==================================";
-    GotoXY(65, 28); std::cout << ">> Nhan phim bat ky de quay lai <<";
-    _getch();
+        if (key == 'W') selected = (selected - 1 + totalOptions) % totalOptions;
+        else if (key == 'S') selected = (selected + 1) % totalOptions;
+        else if (key == 13) {
+            if (selected == totalSaves) return false;
+
+            if (mode == 0) {
+                ApplyLoadedData(saves[selected]);
+                return true;
+            }
+            else {
+                std::string filename = std::string(saves[selected].name) + ".txt";
+                PerformSave(filename);
+                return true;
+            }
+        }
+
+        if (selected < totalSaves) {
+            if (selected < viewOffset) { viewOffset = selected; old_selected = -1; }
+            if (selected >= viewOffset + 3) { viewOffset = selected - 3 + 1; old_selected = -1; }
+        }
+    }
 }
 
+void ShowSaveGameScreen() {
+    ClearInputBuffer();
+    int selected = 0;
+    int old_selected = -1;
 
-//-----TRIỂN KHAI CÁC HÀM XỬ LÝ-----
+    DrawSaveMenu(selected, true);
+
+    while (true) {
+        if (selected != old_selected) {
+            DrawSaveMenu(selected, false);
+            old_selected = selected;
+        }
+
+        char key = toupper(_getch());
+        if (key == 27) { ResetColor(); return; }
+
+        if (key == 'W') selected = (selected - 1 + 3) % 3;
+        else if (key == 'S') selected = (selected + 1) % 3;
+        else if (key == 13) {
+            switch (selected) {
+            case 0: HandleNewSaveInput();
+                DrawSaveMenu(selected, true);
+                old_selected = -1;
+                break;
+            case 1: HandleFileSelection(1);
+                DrawSaveMenu(selected, true);
+                old_selected = -1;
+                break;
+            case 2: ResetColor(); return;
+            }
+        }
+    }
+}
+
+bool ShowLoadGameScreen() {
+    return HandleFileSelection(0);
+}
 
 void RunMenuState() {
     int choice = HandleMainMenuInput();
@@ -478,112 +524,88 @@ void RunMenuState() {
     case 5: currentState = EXIT; break;
     }
 }
+
 void RunNewGameModeState() {
     int choice = HandleNewGameMenuInput();
     switch (choice) {
-    case 0: // 1 Player -> Coming Soon
-        ShowComingSoonPopup();
-        currentState = MENU;
-        break;
-    case 1: // 2 Players
-        _player1_score = 0;
-        _player2_score = 0;
-        _round = 1;
+    case 0: ShowComingSoonPopup(); currentState = MENU; break;
+    case 1:
+        _player1_score = 0; _player2_score = 0; _round = 1;
         currentState = PLAYER_NAME_INPUT;
         break;
-    case 2: // Back
-    case ESCAPE_KEY:
-        currentState = MENU;
-        break;
+    case 2: case ESCAPE_KEY: currentState = MENU; break;
     }
 }
+
 void Run2PlayerNameInputState() {
-    bool isReady = Handle2PlayerNameInput();
-    if (isReady) {
-        StartGame(); // Hàm reset dữ liệu cũ của bạn
+    if (Handle2PlayerNameInput()) {
+        StartGame();
         currentState = PLAY_2P;
     }
     else {
         currentState = NEW_GAME_MODE;
     }
 }
+
 void RunPlayState() {
     Handle2PlayerGame();
     GotoBoard(_X, _Y);
     Sleep(15);
 }
+
 void RunGameOverState() {
     SetCursorVisible(false);
     int choice = HandleGameOverScreen();
     switch (choice) {
     case 0: ShowSaveGameScreen(); break;
     case 1: StartGame(); currentState = PLAY_2P; break;
-    case 2:
-        _player1_score = 0;
-        _player2_score = 0;
-        _round = 1;
-        currentState = MENU;
-        break;
+    case 2: _player1_score = 0; _player2_score = 0; _round = 1; currentState = MENU; break;
     }
 }
+
 void RunPauseState() {
     SetCursorVisible(false);
     int pauseChoice = HandlePauseMenuInput();
     switch (pauseChoice) {
-    case 0: // Resume
-        DrawGameUI_2P();
-        DrawBoard(BOARD_SIZE);
-        RedrawBoardState();
-        
-        SetCursorVisible(true);
-        currentState = PLAY_2P;
-        break;
-    case 1: // Restart
-        SetCursorVisible(true);
-        StartGame();
-        currentState = PLAY_2P;
-        break;
+    case 0:
+        DrawGameUI_2P(); DrawBoard(BOARD_SIZE); RedrawBoardState();
+        SetCursorVisible(true); currentState = PLAY_2P; break;
+    case 1:
+        SetCursorVisible(true); StartGame(); currentState = PLAY_2P; break;
     case 2: ShowSaveGameScreen(); break;
-    case 3: RunSettingsPState(); break;
-    case 4: currentState = MENU; SetCursorVisible(false); break;
+    case 3: RunGuide(); break;
+    case 4: RunSettingsPState(); break;
+    case 5: currentState = MENU; SetCursorVisible(false); break;
     }
 }
-void RunSettingsState() {
-    ShowComingSoonPopup();
+
+void RunSettingsState() { ShowComingSoonPopup(); currentState = MENU; }
+void RunSettingsPState() { ShowComingSoonPopup(); currentState = PAUSE; }
+
+void RunGuideState() {
+    RunGuide();
     currentState = MENU;
 }
-void RunSettingsPState() {
-    ShowComingSoonPopup();
-    currentState = PAUSE;
-}
-void RunGuideState() {
-    StartGuide();
-}
+
 void RunAboutState() {
-    StartAbout();
+    RunAbout();
+    currentState = MENU;
 }
+
 void RunLoadState() {
     ResetData();
-    bool loadSuccess = ShowLoadGameScreen();
-    if (loadSuccess) {
+    if (ShowLoadGameScreen()) {
         ClearScreenWithColor(97, 100, 151);
         SetColorRGB(0, 0, 0);
         DrawGameUI_2P();
 
-        int status = TestBoard();
-        if (status != 2) { // Game đã kết thúc
-            // Reset bàn cờ
+        if (TestBoard() != 2) {
             for (int i = 0; i < BOARD_SIZE; i++)
                 for (int j = 0; j < BOARD_SIZE; j++) _A[i][j].c = 0;
-
             _moveCount = 0; _currentPlayer = 1; _TURN = true; _X = 0; _Y = 0;
-            UpdateDynamic2P_UI();
-            RedrawBoardState();
-
+            UpdateDynamic2P_UI(); RedrawBoardState();
             GotoXY(LEFT, TOP - 2);
-            SetColorRGB(255, 255, 0);
-            std::cout << "Loaded finished game. Starting new round...";
-            SetColorRGB(0, 0, 0);
+            SetColorRGB(255, 255, 0); cout << "Loaded finished game. Starting new round..."; SetColorRGB(0, 0, 0);
         }
         else {
             RedrawBoardState();
@@ -597,11 +619,7 @@ void RunLoadState() {
     }
 }
 
-//-----HÀM ĐIỀU PHỐI CHÍNH (StartApp)-----
-
 void StartApp() {
-    // 1. TẠO BẢNG ÁNH XẠ (MAP)
-    // "Nếu trạng thái là A thì chạy hàm B"
     std::map<GameState, StateFunc> stateMachine;
     stateMachine[MENU] = RunMenuState;
     stateMachine[NEW_GAME_MODE] = RunNewGameModeState;
@@ -613,15 +631,13 @@ void StartApp() {
     stateMachine[LOAD] = RunLoadState;
     stateMachine[ABOUT] = RunAboutState;
     stateMachine[GUIDE] = RunGuideState;
-    // 2. VÒNG LẶP GAME
+
     while (true) {
         if (currentState == EXIT) {
             ExitGame();
-            return; // Thoát hàm, về main để return 0
+            return;
         }
-        // Kỹ thuật Function Map: Tìm trạng thái trong bảng và chạy hàm tương ứng
         if (stateMachine.find(currentState) != stateMachine.end()) {
-            // Gọi hàm thông qua con trỏ
             stateMachine[currentState]();
         }
     }

@@ -32,3 +32,7 @@ inline void SetBgW(int r, int g, int b) {
 inline void ResetColorW() {
     std::wcout << L"\x1b[0m";
 }
+
+inline void SetBgColorRGB(int r, int g, int b) {
+    std::cout << "\x1b[48;2;" << r << ";" << g << ";" << b << "m";
+}
