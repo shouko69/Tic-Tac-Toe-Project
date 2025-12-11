@@ -21,7 +21,7 @@ void MoveRight();
 void MoveLeft();
 void MoveUp();
 void MoveDown();
-
+void ClearInputBuffer();
 int HandleMainMenuInput();
 int HandlePauseMenuInput();
 int HandleNewGameMenuInput();

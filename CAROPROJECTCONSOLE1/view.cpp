@@ -311,6 +311,7 @@ void ShowGroupIntro() {
         DrawGroup6(x, y, b);
         Sleep(0);
     }
+    ClearInputBuffer();
     ClearScreenWithColor(0, 0, 0);
 }
 
@@ -350,6 +351,7 @@ void DrawLoadingScreen() {
         else std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    ClearInputBuffer();
 }
 
 void DrawPressAnyKeyPrompt(bool showText) {

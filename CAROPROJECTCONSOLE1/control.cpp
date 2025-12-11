@@ -237,9 +237,24 @@ bool Handle2PlayerNameInput() {
 void RunIntro() {
     DrawLoadingScreen();
     while (true) {
-        if (_kbhit()) { _getch(); break; }
-        DrawPressAnyKeyPrompt(true);  Sleep(500);
-        DrawPressAnyKeyPrompt(false); Sleep(500);
+        // Kiểm tra nếu có phím nhấn
+        if (_kbhit()) {
+            ClearInputBuffer();
+            break;
+        }
+
+        DrawPressAnyKeyPrompt(true);
+        for (int i = 0; i < 5; i++) {
+            if (_kbhit()) break;
+            Sleep(100);
+        }
+        if (_kbhit()) continue; 
+
+        DrawPressAnyKeyPrompt(false);
+        for (int i = 0; i < 5; i++) {
+            if (_kbhit()) break;
+            Sleep(100);
+        }
     }
 }
 
