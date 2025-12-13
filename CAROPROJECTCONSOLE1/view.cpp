@@ -658,32 +658,6 @@ void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const cha
     }
     ResetColor();
 }
-void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer) {
-    SetBgRGB(218, 66, 76);
-    GotoXY(51, 26);
-    SetColorRGB(255, 255, 255);
-    std::cout << p1_buffer;
-    for (int i = strlen(p1_buffer); i < 20; i++) std::cout << " ";
-
-    GotoXY(104, 26);
-    SetColorRGB(255, 255, 255);
-    std::cout << p2_buffer;
-    for (int i = strlen(p2_buffer); i < 20; i++) std::cout << " ";
-
-    int backX = CenterX("[ BACK ]") + 1;
-    int backY = 33;
-    GotoXY(backX, backY);
-
-    if (activeControl == 2) {
-        SetColorRGB(255, 255, 0);
-        std::cout << " ☼ BACK ☼";
-    }
-    else {
-        SetColorRGB(255, 255, 255);
-        std::cout << "   BACK   ";
-    }
-    ResetColor();
-}
 
 void DrawBoard(int pSize) {
     SetColorRGB(0, 0, 0);
@@ -769,7 +743,7 @@ void DrawStatic2P_UI() {
     GotoXY(p2_box_x - 1, p2_box_y + 11); std::cout << "MOVES: ";
     GotoXY(78, 5); std::cout << "ROUND: " << _round;
 }
-void UpdateDynamic2P_UI() {
+void UpdateDynamic1P_UI() {
     int X_BIG_POS_X = 34;
     int X_BIG_POS_Y = 21;
     int O_BIG_POS_X = 123;

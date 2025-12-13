@@ -347,15 +347,17 @@ void RunGuide() {
     }
 }
 void Handle1PlayerGame() {
-    //LƯỢT CỦA AI (MÁY TÍNH - PLAYER 2)
+    //LƯỢT CỦA AI (PLAYER 2)
     if (_currentPlayer == 2) {
         GotoXY(0, 0); 
         //std::cout << "AI Thinking!"; 
         Sleep(300);
         AIMove bestMove = FindBestMove(4);
+        int drawX = LEFT + bestMove.x * CELL_VISUAL_WIDTH;
+        int drawY = TOP + bestMove.y * CELL_VISUAL_HEIGHT;
         if (bestMove.x != -1 && bestMove.y != -1) {
             _A[bestMove.y][bestMove.x].c = -1;
-            DrawOmini(bestMove.x, bestMove.y);
+            DrawOmini(drawX + 2, drawY + 1);
             _moveCount++;
             int status = TestBoard();
             if (status != 2) { // Có kết quả
@@ -395,7 +397,9 @@ void Handle1PlayerGame() {
             _A[_Y][_X].c = 1;
 
             _moveCount++;
-            DrawXmini(_X, _Y); // Vẽ quân X
+            int drawX = LEFT + _X * CELL_VISUAL_WIDTH;
+            int drawY = TOP + _Y * CELL_VISUAL_HEIGHT;
+            DrawXmini(drawX + 2, drawY + 1);; // Vẽ quân X
 
             // B. Kiểm tra thắng thua
             int status = TestBoard();
