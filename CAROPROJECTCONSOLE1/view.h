@@ -42,16 +42,21 @@ void DrawMenuItem(int index, bool is_selected);
 void DrawFullNewGameMenu(int selected_index); 
 void DrawNewGameMenuItem(int index, bool is_selected); 
 void ShowGroupIntro();
+void DrawFull1PlayerNameScreen();
 void DrawFull2PlayerNameScreen(); 
+void Update1PlayerNameScreen(int activeControl, const char* p1_buffer, const char* bot_buffer);
 void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer); 
 void DrawGuideScreen();
 void DrawFrame(int x, int y, int width, int height); 
 void DrawFrame1(int x, int y, int width, int height);
 void DrawBoard(int pSize);
 void RedrawBoardState();
-void GotoBoard(int pX, int pY); 
-void DrawGameUI_2P(); 
+void GotoBoard(int pX, int pY); \
+void DrawGameUI_1P();
+void DrawGameUI_2P();
+void DrawStatic1P_UI(); 
 void DrawStatic2P_UI(); 
+void UpdateDynamic1P_UI();
 void UpdateDynamic2P_UI(); 
 void DrawBigArt_Color(int x, int y, const std::vector<std::string>& art, int r, int g, int b);
 
