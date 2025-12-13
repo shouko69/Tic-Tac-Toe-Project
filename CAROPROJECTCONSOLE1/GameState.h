@@ -8,7 +8,8 @@ enum GameState {
 	PLAY_1P, // comming soon
 	PLAY_2P, // new
 	NEW_GAME_MODE, // new 
-	PLAYER_NAME_INPUT, // new
+	PLAYER_NAME_INPUT_1P, // new
+	PLAYER_NAME_INPUT_2P, // new
 	GAME_OVER, // new
 	LOAD,
 	SETTINGS,
