@@ -175,7 +175,62 @@ int HandleGameOverScreen() {
         }
     }
 }
+bool Handle1PlayerNameInput() {
+    int activeControl = 0;
+    char p1_buffer[MAX_NAME_LEN] = "";
+    char bot_buffer[MAX_NAME_LEN] = "MINIMAX AI";
+    DrawFull1PlayerNameScreen();
 
+    while (true) {
+        Update1PlayerNameScreen(activeControl, p1_buffer, bot_buffer);
+        int key = _getch();
+
+        if (key == 27) return false; // ESC
+        if (key == 9) { // TAB
+            activeControl = (activeControl + 1) % 3;
+            continue;
+        }
+
+        switch (activeControl) {
+        case 0: // Player 1
+            if (isprint(key) && strlen(p1_buffer) < MAX_NAME_LEN - 1) {
+                size_t len = strlen(p1_buffer);
+                p1_buffer[len] = key; p1_buffer[len + 1] = '\0';
+            }
+            else if (key == 8 && strlen(p1_buffer) > 0) { // Backspace
+                p1_buffer[strlen(p1_buffer) - 1] = '\0';
+            }
+            else if (key == 13) { // Enter
+                if (strlen(p1_buffer) == 0) strcpy_s(p1_buffer, MAX_NAME_LEN, GetRandomName().c_str());
+                activeControl = 1;
+            }
+            break;
+
+        case 1: // BOT
+            if (isprint(key) && strlen(bot_buffer) < MAX_NAME_LEN - 1) {
+                size_t len = strlen(bot_buffer);
+                bot_buffer[len] = key; bot_buffer[len + 1] = '\0';
+            }
+            else if (key == 8) { // Backspace
+                if (strlen(bot_buffer) > 0) bot_buffer[strlen(bot_buffer) - 1] = '\0';
+                else activeControl = 0;
+            }
+            else if (key == 13) { // Enter
+                if (strlen(bot_buffer) == 0) strcpy_s(bot_buffer, MAX_NAME_LEN, GetRandomName().c_str());
+                if (strlen(p1_buffer) > 0) {
+                    strcpy_s(_player1_name, MAX_NAME_LEN, p1_buffer);
+                    strcpy_s(_player2_name, MAX_NAME_LEN, bot_buffer);
+                    return true;
+                }
+            }
+            break;
+
+        case 2: // Nút BACK
+            if (key == 13) return false;
+            break;
+        }
+    }
+}
 bool Handle2PlayerNameInput() {
     ClearInputBuffer();
     int activeControl = 0;
@@ -291,7 +346,73 @@ void RunGuide() {
         Sleep(50);
     }
 }
+void Handle1PlayerGame() {
+    //LƯỢT CỦA AI (MÁY TÍNH - PLAYER 2)
+    if (_currentPlayer == 2) {
+        GotoXY(0, 0); 
+        //std::cout << "AI Thinking!"; 
+        Sleep(300);
+        AIMove bestMove = FindBestMove(4);
+        if (bestMove.x != -1 && bestMove.y != -1) {
+            _A[bestMove.y][bestMove.x].c = -1;
+            DrawOmini(bestMove.x, bestMove.y);
+            _moveCount++;
+            int status = TestBoard();
+            if (status != 2) { // Có kết quả
+                if (status == -1) { _gameWinner = 2; _player2_score++; } // AI thắng
+                else if (status == 1) { _gameWinner = 1; _player1_score++; } // Người thắng
+                else { _gameWinner = 0; } // Hòa
+                currentState = GAME_OVER;
+            }
+            else { 
+                _currentPlayer = 1;
+                _TURN = !_TURN; // Đổi icon lượt ở UI
+                UpdateDynamic1P_UI();
+            }
+        }
+        return;
+    }
+    
+    // LƯỢT CỦA NGƯỜI CHƠI (PLAYER 1)
+    GotoBoard(_X, _Y);
+    int key = _getch();
+    if (key == 0 || key == 224) key = _getch();
+    else key = toupper(key);
 
+    if (key == 27) { // ESC -> Pause
+        currentState = PAUSE;
+        return;
+    }
+
+    bool validAction = false;
+    if (key == 'W' || key == 72) MoveUp();
+    else if (key == 'S' || key == 80) MoveDown();
+    else if (key == 'A' || key == 75) MoveLeft();
+    else if (key == 'D' || key == 77) MoveRight();
+    else if (key == 'F' || key == 32 || key == 13) validAction = true; 
+    if (validAction) {
+        if (CheckBoard(_X, _Y) != 0) {
+            _A[_Y][_X].c = 1;
+
+            _moveCount++;
+            DrawXmini(_X, _Y); // Vẽ quân X
+
+            // B. Kiểm tra thắng thua
+            int status = TestBoard();
+            if (status != 2) {
+                if (status == -1) { _gameWinner = 2; _player2_score++; }
+                else if (status == 1) { _gameWinner = 1; _player1_score++; }
+                else { _gameWinner = 0; }
+                currentState = GAME_OVER;
+            }
+            else { // Đổi lượt sang AI
+                _currentPlayer = 2;
+                _TURN = !_TURN;
+                UpdateDynamic1P_UI();
+            }
+        }
+    }
+}
 void Handle2PlayerGame() {
     _lastTimeCheck = time(0);
     GotoBoard(_X, _Y);
@@ -543,15 +664,26 @@ void RunMenuState() {
 void RunNewGameModeState() {
     int choice = HandleNewGameMenuInput();
     switch (choice) {
-    case 0: ShowComingSoonPopup(); currentState = MENU; break;
+    case 0: 
+        currentState = PLAYER_NAME_INPUT_1P;
+        break;
     case 1:
         _player1_score = 0; _player2_score = 0; _round = 1;
-        currentState = PLAYER_NAME_INPUT;
+        currentState = PLAYER_NAME_INPUT_2P;
         break;
     case 2: case ESCAPE_KEY: currentState = MENU; break;
     }
 }
-
+void Run1PlayerNameInputState() {
+    bool isReady = Handle1PlayerNameInput();
+    if (isReady) {
+        StartGame(); // Hàm reset dữ liệu cũ của bạn
+        currentState = PLAY_1P;
+    }
+    else {
+        currentState = NEW_GAME_MODE;
+    }
+}
 void Run2PlayerNameInputState() {
     if (Handle2PlayerNameInput()) {
         StartGame();
@@ -561,8 +693,12 @@ void Run2PlayerNameInputState() {
         currentState = NEW_GAME_MODE;
     }
 }
-
-void RunPlayState() {
+void RunPlayState_1P() {
+    Handle1PlayerGame();
+    GotoBoard(_X, _Y);
+    Sleep(15);
+}
+void RunPlayState_2P() {
     Handle2PlayerGame();
     GotoBoard(_X, _Y);
     Sleep(15);
@@ -638,8 +774,10 @@ void StartApp() {
     std::map<GameState, StateFunc> stateMachine;
     stateMachine[MENU] = RunMenuState;
     stateMachine[NEW_GAME_MODE] = RunNewGameModeState;
-    stateMachine[PLAYER_NAME_INPUT] = Run2PlayerNameInputState;
-    stateMachine[PLAY_2P] = RunPlayState;
+    stateMachine[PLAYER_NAME_INPUT_1P] = Run1PlayerNameInputState; //AI
+    stateMachine[PLAYER_NAME_INPUT_2P] = Run2PlayerNameInputState;
+    stateMachine[PLAY_1P] = RunPlayState_1P;
+    stateMachine[PLAY_2P] = RunPlayState_2P;
     stateMachine[GAME_OVER] = RunGameOverState;
     stateMachine[PAUSE] = RunPauseState;
     stateMachine[SETTINGS] = RunSettingsState;
