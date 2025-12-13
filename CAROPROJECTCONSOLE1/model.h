@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <vector>
 #include <ctime>
 #include "GameState.h"
 #include <conio.h>
@@ -54,5 +55,14 @@ int TestBoard();
 int CheckBoard(int pX, int pY);
 bool IsFullBoard();
 bool CheckWin();
+struct AIMove {
+    int x, y;  
+    long long score; 
+};
+std::vector<_POINT> getPossibleMoves();
+long evaluateBoard();
+long minimax(int depth, long alpha, long beta, bool isMaximizing);
+AIMove FindBestMove(int depth);
+
 
 
