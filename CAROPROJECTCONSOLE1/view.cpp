@@ -562,6 +562,29 @@ void DrawFullNewGameMenu(int selected_index) {
         DrawNewGameMenuItem(i, (i == selected_index));
     }
 }
+void DrawFull1PlayerNameScreen() {
+    ClearScreenWithColor(97, 100, 151);
+    SetColorRGB(255, 255, 255);
+    DrawLargebackground1(0, 0);
+    DrawPlayerframe(42, 22);
+    DrawPlayerframe(95, 22);
+    DrawBackframe(78, 32);
+    Draw2Players(24, 2);
+    SetColorRGB(255, 255, 255);
+    SetBgRGB(218, 66, 76);
+    GotoXY(44, 23); std::cout << ">> Player's Name1 <<";
+    GotoXY(97, 23); std::cout << ">> Bot's Name2 <<";
+    GotoXY(44, 24); std::cout << "*Less than 20 characters";
+    GotoXY(97, 24); std::cout << "*Less than 20 characters";
+    GotoXY(44, 26); std::cout << "Enter: ";
+    GotoXY(97, 26); std::cout << "Enter: ";
+    DrawTutorial(37, 40);
+    SetBgRGB(176, 140, 88);
+    SetColorRGB(0, 0, 0);
+    GotoXY(40, 42); std::cout << "'ENTER': CONFIRM";
+    GotoXY(40, 44); std::cout << "'TAB': SWITCH";
+    GotoXY(40, 46); std::cout << "'ESC': QUIT";
+}
 
 void DrawFull2PlayerNameScreen() {
     ClearScreenWithColor(97, 100, 151);
@@ -586,7 +609,55 @@ void DrawFull2PlayerNameScreen() {
     GotoXY(40, 44); std::cout << "'TAB': SWITCH";
     GotoXY(40, 46); std::cout << "'ESC': QUIT";
 }
+void Update1PlayerNameScreen(int activeControl, const char* p1_buffer, const char* bot_buffer) {
+    SetBgRGB(218, 66, 76);
+    GotoXY(51, 26);
+    SetColorRGB(255, 255, 255);
+    std::cout << p1_buffer;
+    for (int i = strlen(p1_buffer); i < 20; i++) std::cout << " ";
+    GotoXY(104, 26);
+    SetColorRGB(255, 255, 255);
+    std::cout << bot_buffer;
+    for (int i = strlen(bot_buffer); i < 20; i++) std::cout << " ";
+    int backX = CenterX("[ BACK ]") + 1;
+    int backY = 33;
+    GotoXY(backX, backY);
+    if (activeControl == 2) {
+        SetColorRGB(255, 255, 0);
+        std::cout << " ☼ BACK ☼";
+    }
+    else {
+        SetColorRGB(255, 255, 255);
+        std::cout << "   BACK   ";
+    }
+    ResetColor();
+}
+void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer) {
+    SetBgRGB(218, 66, 76);
+    GotoXY(51, 26);
+    SetColorRGB(255, 255, 255);
+    std::cout << p1_buffer;
+    for (int i = strlen(p1_buffer); i < 20; i++) std::cout << " ";
 
+    GotoXY(104, 26);
+    SetColorRGB(255, 255, 255);
+    std::cout << p2_buffer;
+    for (int i = strlen(p2_buffer); i < 20; i++) std::cout << " ";
+
+    int backX = CenterX("[ BACK ]") + 1;
+    int backY = 33;
+    GotoXY(backX, backY);
+
+    if (activeControl == 2) {
+        SetColorRGB(255, 255, 0);
+        std::cout << " ☼ BACK ☼";
+    }
+    else {
+        SetColorRGB(255, 255, 255);
+        std::cout << "   BACK   ";
+    }
+    ResetColor();
+}
 void Update2PlayerNameScreen(int activeControl, const char* p1_buffer, const char* p2_buffer) {
     SetBgRGB(218, 66, 76);
     GotoXY(51, 26);
@@ -670,7 +741,20 @@ void GotoBoard(int pX, int pY) {
     int screenY = startY + (CELL_VISUAL_HEIGHT / 2);
     GotoXY(screenX, screenY + 1);
 }
-
+void DrawStatic1P_UI() {
+    const int p1_box_x = 14, p1_box_y = 5;
+    const int p2_box_x = 133, p2_box_y = 5;
+    SetBgRGB(135, 236, 255);
+    GotoXY(p1_box_x - 3, p1_box_y + 5);     PrintCenteredText(std::string(_player1_name) + " (X) ", 23);
+    GotoXY(p1_box_x - 2, p1_box_y + 7); std::cout << "WINS: ";
+    GotoXY(p1_box_x - 2, p1_box_y + 9); std::cout << "TIME LEFT: ";
+    GotoXY(p1_box_x - 2, p1_box_y + 11); std::cout << "MOVES: ";
+    GotoXY(p2_box_x - 2, p2_box_y + 5);     PrintCenteredText(std::string(_player2_name) + " (O) ", 23);
+    GotoXY(p2_box_x - 1, p2_box_y + 7); std::cout << "WINS: ";
+    GotoXY(p2_box_x - 1, p2_box_y + 9); std::cout << "TIME LEFT: ";
+    GotoXY(p2_box_x - 1, p2_box_y + 11); std::cout << "MOVES: ";
+    GotoXY(78, 5); std::cout << "ROUND: " << _round;
+}
 void DrawStatic2P_UI() {
     const int p1_box_x = 14, p1_box_y = 5;
     const int p2_box_x = 133, p2_box_y = 5;
@@ -685,7 +769,6 @@ void DrawStatic2P_UI() {
     GotoXY(p2_box_x - 1, p2_box_y + 11); std::cout << "MOVES: ";
     GotoXY(78, 5); std::cout << "ROUND: " << _round;
 }
-
 void UpdateDynamic2P_UI() {
     int X_BIG_POS_X = 34;
     int X_BIG_POS_Y = 21;
@@ -738,7 +821,72 @@ void UpdateDynamic2P_UI() {
         std::cout << fullTime;
     }
 }
-
+void UpdateDynamic2P_UI() {
+    int X_BIG_POS_X = 34;
+    int X_BIG_POS_Y = 21;
+    int O_BIG_POS_X = 123;
+    int O_BIG_POS_Y = 21;
+    int bgR = 135, bgG = 236, bgB = 255;
+    int xRedR = 255, xRedG = 82, xRedB = 82;
+    int oGrnR = 105, oGrnG = 240, oGrnB = 174;
+    if (_currentPlayer == 1) {
+        DrawBigArt_Color(X_BIG_POS_X, X_BIG_POS_Y, ART_X_BIG, 255, 234, 0);
+        DrawBigArt_Color(O_BIG_POS_X, O_BIG_POS_Y, ART_O_BIG, oGrnR, oGrnG, oGrnB);
+    }
+    else {
+        DrawBigArt_Color(X_BIG_POS_X, X_BIG_POS_Y, ART_X_BIG, xRedR, xRedG, xRedB);
+        DrawBigArt_Color(O_BIG_POS_X, O_BIG_POS_Y, ART_O_BIG, 255, 234, 0);
+    }
+    const int p1_box_x = 14, p1_box_y = 5;
+    const int p2_box_x = 133, p2_box_y = 5;
+    SetColorRGB(0, 0, 0);
+    SetBgRGB(bgR, bgG, bgB);
+    GotoXY(p1_box_x + 4, p1_box_y + 7);
+    std::cout << _player1_score << "  ";
+    GotoXY(p1_box_x + 5, p1_box_y + 11);
+    std::cout << (_moveCount + 1) / 2 << "  ";
+    GotoXY(p2_box_x + 5, p2_box_y + 7);
+    std::cout << _player2_score << "  ";
+    GotoXY(p2_box_x + 6, p2_box_y + 11);
+    std::cout << _moveCount / 2 << "  ";
+    GotoXY(85, 5);
+    std::cout << _round;
+    int min = _turnTimer / 60;
+    int sec = _turnTimer % 60;
+    char runningTime[30];
+    sprintf_s(runningTime, "%02d:%02d", min, sec);
+    char fullTime[] = "02:00";
+    if (_currentPlayer == 1) {
+        GotoXY(p1_box_x + 9, p1_box_y + 9);
+        SetColorRGB(0, 0, 0);
+        std::cout << runningTime;
+        GotoXY(p2_box_x + 10, p2_box_y + 9);
+        SetColorRGB(0, 0, 0);
+        std::cout << fullTime;
+    }
+    else {
+        GotoXY(p2_box_x + 10, p2_box_y + 9);
+        SetColorRGB(0, 0, 0);
+        std::cout << runningTime;
+        GotoXY(p1_box_x + 9, p1_box_y + 9);
+        SetColorRGB(0, 0, 0);
+        std::cout << fullTime;
+    }
+}
+void DrawGameUI_1P() {
+    ClearScreenWithColor(97, 100, 151);
+    DrawSnowbrick(0, 47);
+    DrawChimcanhcut(0, 24);
+    DrawSnowman(120, 24);
+    DrawSnowlength(46, 46);
+    DrawFrameingame(7, 8);
+    DrawFrameingame(127, 8);
+    DrawRound(75, 0);
+    DrawBoard(BOARD_SIZE);
+    SetColorRGB(0, 0, 0);
+    DrawStatic1P_UI();
+    UpdateDynamic1P_UI();
+}
 void DrawGameUI_2P() {
     ClearScreenWithColor(97, 100, 151);
     DrawSnowbrick(0, 47);
