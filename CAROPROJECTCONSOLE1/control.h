@@ -26,8 +26,9 @@ int HandleMainMenuInput();
 int HandlePauseMenuInput();
 int HandleNewGameMenuInput();
 int HandleGameOverScreen();
+bool Handle1PlayerNameInput(); // new
 bool Handle2PlayerNameInput();
-
+void Handle1PlayerGame();
 void Handle2PlayerGame();
 
 void HandleNewSaveInput();
@@ -42,6 +43,7 @@ void RunAbout();
 
 void RunMenuState();
 void RunNewGameModeState();
+void Run1PlayerNameInputState();
 void Run2PlayerNameInputState();
 void RunPlayState();
 void RunGameOverState();
